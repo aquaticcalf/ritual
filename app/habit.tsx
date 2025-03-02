@@ -6,19 +6,8 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-
-type Habit = {
-  id: string;
-  name: string;
-  icon: string;
-  frequency: string[];
-  reminder: boolean;
-  reminderTime?: string;
-  currentStreak: number;
-  bestStreak: number;
-  lastDone: string;
-  createdOn: string;
-};
+import { Habit } from '@/lib/types';
+import { reloadHabitReminders } from '@/lib/notifications';
 
 const HabitPage = () => {
   const { habit } = useLocalSearchParams();
@@ -36,6 +25,10 @@ const HabitPage = () => {
         const habits = storedHabits ? JSON.parse(storedHabits) : [];
         const updatedHabits = habits.filter((h: Habit) => h.id !== habitData.id);
         await AsyncStorage.setItem('habits', JSON.stringify(updatedHabits));
+
+        // clear the current notification schedule for the habit
+        await reloadHabitReminders(updatedHabits);
+
         router.push('/');
       } catch (error) {
         console.error('Failed to delete the habit:', error);
@@ -116,7 +109,9 @@ const HabitPage = () => {
         {habitData.reminder && (
           <ThemedView style={[styles.infoBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.infoTitle, { color: textColor }]}>Reminder Time</ThemedText>
-            <ThemedText style={[styles.infoValue, { color: textColor }]}>{habitData.reminderTime}</ThemedText>
+            <ThemedText style={[styles.infoValue, { color: textColor }]}>
+              {habitData.reminderTime ? new Date(habitData.reminderTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+            </ThemedText>
           </ThemedView>
         )}
 

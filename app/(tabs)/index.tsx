@@ -7,19 +7,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { formatDate, isStreakAlive } from "@/lib/utils";
-
-type Habit = {
-  id: string;
-  name: string;
-  icon: string;
-  frequency: string[];
-  reminder: boolean;
-  reminderTime?: string;
-  currentStreak: number;
-  bestStreak: number;
-  lastDone: string;
-  createdOn: string;
-};
+import { requestNotificationPermissions } from '@/lib/notifications';
+import { Habit } from "@/lib/types";
 
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -92,6 +81,10 @@ const HomeScreen = () => {
     };
 
     fetchHabits();
+  }, []);
+
+  useEffect(() => {
+    requestNotificationPermissions();
   }, []);
 
   return (
