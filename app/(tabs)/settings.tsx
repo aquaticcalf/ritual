@@ -1,9 +1,11 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { RadioButton } from 'react-native-paper';
 import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { reloadHabitReminders } from '@/lib/notifications';
 
 export default function Settings() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -13,6 +15,18 @@ export default function Settings() {
   const habitItemBackgroundColor = useThemeColor({}, 'card');
 
   const [theme, setTheme] = useState('system');
+
+  const handleReloadReminders = async () => {
+    try {
+      const storedHabits = await AsyncStorage.getItem('habits');
+      const habits = storedHabits ? JSON.parse(storedHabits) : [];
+      await reloadHabitReminders(habits);
+      Alert.alert('Success', 'Habit reminders reloaded successfully');
+    } catch (error) {
+      console.error('Failed to reload habit reminders:', error);
+      Alert.alert('Error', 'Failed to reload habit reminders');
+    }
+  };
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
@@ -36,6 +50,9 @@ export default function Settings() {
           </RadioButton.Group>
           <ThemedText style={styles.disclaimer}>*Theme setting is currently not working</ThemedText>
         </ThemedView>
+        <TouchableOpacity style={[styles.button, { backgroundColor: buttonColor }]} onPress={handleReloadReminders}>
+          <ThemedText style={[styles.buttonText, { color: backgroundColor } ]}>Reload Habit Reminders</ThemedText>
+        </TouchableOpacity>
       </ThemedView>
     </ThemedView>
   );
@@ -79,5 +96,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     opacity: 0.5,
+  },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

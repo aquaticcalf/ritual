@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Habit } from './types';
+import { formatDate } from './utils';
 
 export async function requestNotificationPermissions() {
   const { status } = await Notifications.requestPermissionsAsync();
@@ -9,17 +10,17 @@ export async function requestNotificationPermissions() {
 }
 
 export async function reloadHabitReminders(habits: Habit[]) {
-    const notifications = await Notifications.getAllScheduledNotificationsAsync();
-    for (const notification of notifications) {
-        if (notification.content.title === 'Habit Reminder') {
-            await Notifications.cancelScheduledNotificationAsync(notification.identifier);
-        }
+  const notifications = await Notifications.getAllScheduledNotificationsAsync();
+  for (const notification of notifications) {
+    if (notification.content.title === 'Habit Reminder') {
+      await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }
-    for (const habit of habits) {
-        if (habit.reminder && habit.reminderTime) {
-            await scheduleHabitReminder(habit);
-        }
+  }
+  for (const habit of habits) {
+    if (habit.reminder && habit.reminderTime) {
+      await scheduleHabitReminder(habit);
     }
+  }
 }
 
 export async function scheduleHabitReminder(habit: Habit) {
@@ -28,6 +29,12 @@ export async function scheduleHabitReminder(habit: Habit) {
     throw new Error('Reminder time is not defined');
   }
   const reminderTime = new Date(habit.reminderTime);
+  const today = formatDate(new Date());
+
+  if (habit.lastDone === today) {
+    // Skip scheduling notification if the habit is already done today
+    return;
+  }
 
   for (const day of habit.frequency) {
     const dayIndex = days.indexOf(day);
