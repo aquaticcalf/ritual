@@ -16,7 +16,7 @@ type Habit = {
   reminderTime?: string;
   currentStreak: number;
   bestStreak: number;
-  noOfDaysDone: number;
+  lastDone: string;
   createdOn: string;
 };
 

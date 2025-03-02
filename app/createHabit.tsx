@@ -94,7 +94,7 @@ const CreateHabitScreen = () => {
       reminderTime: reminder && reminderTime ? reminderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
       currentStreak: 0,
       bestStreak: 0,
-      noOfDaysDone: 0,
+      lastDone: undefined,
       createdOn: new Date().toISOString()
     };
 
