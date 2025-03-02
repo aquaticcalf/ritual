@@ -1,74 +1,123 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+type Habit = {
+  id: string;
+  name: string;
+  icon: string;
+  frequency: string[];
+  reminder: boolean;
+  reminderTime?: string;
+  currentStreak: number;
+  bestStreak: number;
+  noOfDaysDone: number;
+  createdOn: string;
+};
 
-export default function HomeScreen() {
+const HomeScreen = () => {
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const router = useRouter();
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const iconColor = useThemeColor({}, 'icon');
+  const buttonColor = useThemeColor({}, 'tint');
+  const habitItemBackgroundColor = useThemeColor({}, 'card');
+
+  useEffect(() => {
+    const fetchHabits = async () => {
+      try {
+        const existingHabits = await AsyncStorage.getItem("habits");
+        const habits = existingHabits ? JSON.parse(existingHabits) : [];
+        setHabits(habits);
+      } catch (error) {
+        console.error("Error fetching habits:", error);
+      }
+    };
+
+    fetchHabits();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <ThemedView style={[styles.container, { backgroundColor }]}>
+      <ThemedText style={[styles.header, { color: textColor }]}>Habits Streak</ThemedText>
+      {habits.length === 0 ? (
+        <ThemedText style={{ color: textColor, opacity: 0.5 }}>No habits yet, create a habit by clicking + button</ThemedText>
+      ) : (
+        <FlatList
+          data={habits}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity 
+              style={[styles.habitItem, { backgroundColor: habitItemBackgroundColor }]}
+              onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
+            >
+              <ThemedText style={[styles.icon, { color: iconColor }]}>{item.icon}</ThemedText>
+              <ThemedText style={[styles.habitText, { color: textColor }]}>{item.name}</ThemedText>
+              <ThemedText style={[styles.streak, { color: textColor }]}>{item.currentStreak}🔥</ThemedText>
+            </TouchableOpacity>
+          )}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      )}
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>
+        <FontAwesome name="plus" size={24} color={backgroundColor} />
+      </TouchableOpacity>
+    </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    marginTop: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  habitItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  icon: {
+    marginRight: 15,
+  },
+  habitText: {
+    flex: 1,
+    fontSize: 18,
+  },
+  streak: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
   },
 });
+
+export default HomeScreen;
