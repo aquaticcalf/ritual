@@ -1,11 +1,12 @@
-import { StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, Alert, TouchableOpacity, Switch } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { RadioButton } from 'react-native-paper';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { reloadHabitReminders } from '@/lib/notifications';
+import * as Notifications from 'expo-notifications';
+import { reloadHabitReminders, turnOffAllHabitReminders, turnOnAllHabitReminders } from '@/lib/notifications';
 
 export default function Settings() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -15,6 +16,18 @@ export default function Settings() {
   const habitItemBackgroundColor = useThemeColor({}, 'card');
 
   const [theme, setTheme] = useState('system');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    const fetchNotificationStatus = async () => {
+      const storedHabits = await AsyncStorage.getItem('habits');
+      const habits = storedHabits ? JSON.parse(storedHabits) : [];
+      const notifications = await Notifications.getAllScheduledNotificationsAsync();
+      setNotificationsEnabled(notifications.length > 0);
+    };
+
+    fetchNotificationStatus();
+  }, []);
 
   const handleReloadReminders = async () => {
     try {
@@ -25,6 +38,22 @@ export default function Settings() {
     } catch (error) {
       console.error('Failed to reload habit reminders:', error);
       Alert.alert('Error', 'Failed to reload habit reminders');
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    try {
+      const storedHabits = await AsyncStorage.getItem('habits');
+      const habits = storedHabits ? JSON.parse(storedHabits) : [];
+      if (notificationsEnabled) {
+        await turnOffAllHabitReminders();
+      } else {
+        await turnOnAllHabitReminders(habits);
+      }
+      setNotificationsEnabled(!notificationsEnabled);
+    } catch (error) {
+      console.error('Failed to toggle habit reminders:', error);
+      Alert.alert('Error', 'Failed to toggle habit reminders');
     }
   };
 
@@ -49,6 +78,10 @@ export default function Settings() {
             </ThemedView>
           </RadioButton.Group>
           <ThemedText style={styles.disclaimer}>*Theme setting is currently not working</ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.notificationContainer}>
+          <ThemedText style={[styles.settingLabel, { color: textColor }]}>Notifications</ThemedText>
+          <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} />
         </ThemedView>
         <TouchableOpacity style={[styles.button, { backgroundColor: buttonColor }]} onPress={handleReloadReminders}>
           <ThemedText style={[styles.buttonText, { color: backgroundColor } ]}>Reload Habit Reminders</ThemedText>
@@ -96,6 +129,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     opacity: 0.5,
+  },
+  notificationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
   },
   button: {
     padding: 15,

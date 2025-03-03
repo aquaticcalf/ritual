@@ -23,6 +23,23 @@ export async function reloadHabitReminders(habits: Habit[]) {
   }
 }
 
+export async function turnOffAllHabitReminders() {
+  const notifications = await Notifications.getAllScheduledNotificationsAsync();
+  for (const notification of notifications) {
+    if (notification.content.title === 'Habit Reminder') {
+      await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+    }
+  }
+}
+
+export async function turnOnAllHabitReminders(habits: Habit[]) {
+  for (const habit of habits) {
+    if (habit.reminder && habit.reminderTime) {
+      await scheduleHabitReminder(habit);
+    }
+  }
+}
+
 export async function scheduleHabitReminder(habit: Habit) {
   const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
   if (!habit.reminderTime) {
