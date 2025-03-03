@@ -104,7 +104,7 @@ const HomeScreen = () => {
             >
               <ThemedText style={[styles.icon, { color: iconColor }]}>{item.icon}</ThemedText>
               <ThemedText style={[styles.habitText, { color: textColor }]}>{item.name}</ThemedText>
-              <ThemedText style={[styles.streak, { color: textColor }]}>{item.currentStreak}🔥</ThemedText>
+              <ThemedText style={[styles.streak, { color: textColor }]}>{item.currentStreak} 🔥</ThemedText>
             </TouchableOpacity>
           )}
         />
