@@ -13,7 +13,7 @@ export const lastSupposedToDoDate = (frequency: Frequency): string => {
   const day: number = new Date().getDay();
   // compare the last 7 days with the habit frequency and return the date of the last day the habit is supposed to be done
   const dys: Array<string> = ['S', 'Sa', 'F', 'Th', 'W', 'T', 'M'];
-  for (let i = 1; i < 7; i++) {
+  for (let i = 1; i <= 7; i++) {
     if (frequency.includes(dys[(day + i) % 7])) {
       const date = new Date(new Date().setDate(new Date().getDate() - i));
       return formatDate(date);
@@ -24,6 +24,9 @@ export const lastSupposedToDoDate = (frequency: Frequency): string => {
 }
 
 export const isStreakAlive = (frequency: Frequency, lastDone: string) => {
+
+  if(lastDone == "") return true;
+
   const lastToDo = lastSupposedToDoDate(frequency);
   return lastDone == lastToDo || lastDone == formatDate(new Date());
 }

@@ -14,7 +14,7 @@ import { EmojiPicker } from "@/components/EmojiPicker";
 import TimePicker from "@/components/TimePicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
-import { scheduleHabitReminder } from '@/lib/notifications';
+import { reloadHabitReminders, scheduleHabitReminder } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
 
 const CreateHabitScreen = () => {
@@ -111,7 +111,7 @@ const CreateHabitScreen = () => {
       }
 
       if (updatedHabit.reminder && updatedHabit.reminderTime) {
-        await scheduleHabitReminder(updatedHabit);
+        await reloadHabitReminders(habits);
       }
 
       // Redirect to home screen
