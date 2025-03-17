@@ -5,6 +5,7 @@ import {
   Switch,
   StyleSheet,
   ScrollView,
+  Platform,
 } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -15,11 +16,13 @@ import TimePicker from "@/components/TimePicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { reloadHabitReminders, scheduleHabitReminder } from '@/lib/notifications';
-import { Habit } from "@/lib/types";
+import { Cell, Habit } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 const CreateHabitScreen = () => {
   const { habit } = useLocalSearchParams();
   const habitData = typeof habit === "string" ? JSON.parse(habit) : null;
+  const isWeb = Platform.OS === 'web';
 
   const [name, setName] = useState<string>(habitData?.name || "");
   const [icon, setIcon] = useState<string>(habitData?.icon || "");
@@ -28,7 +31,7 @@ const CreateHabitScreen = () => {
   const [reminderTime, setReminderTime] = useState<Date | undefined>(habitData?.reminderTime ? new Date(habitData.reminderTime) : undefined);
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
 
-  const days = ["M", "T", "W", "Th", "F", "Sa", "S"];
+  const days = ["S", "M", "T", "W", "Th", "F", "Sa"];
 
   const backgroundColor = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
@@ -45,24 +48,35 @@ const CreateHabitScreen = () => {
   }, [habitData]);
 
   useEffect(() => {
-    if (reminder && !reminderTime) {
+    if (reminder && !reminderTime && !isWeb) {
       setReminderTime(new Date());
     }
   }, [reminder]);
 
   const handleCreateHabit = async () => {
+    let heatMap: Array<Cell> = [];
+    const iconToUse = !icon || icon === "" ? "🔥" : icon;
+
     const newHabit: Habit = {
       id: Date.now().toString(),
       name,
-      icon,
+      icon: iconToUse, // Use the local variable instead of state
       frequency,
-      reminder,
+      reminder: isWeb ? false : reminder,  // Force reminders off on web
       reminderTime,
       currentStreak: 0,
       bestStreak: 0,
       lastDone: "",
-      createdOn: new Date().toISOString()
+      createdOn: new Date().toISOString(),
+      heatMap
     };
+
+    // Update the state for UI consistency (not needed for the habit object)
+    if (!icon || icon === "") {
+      setIcon("🔥");
+    }
+
+    console.log(newHabit);
 
     try {
       const existingHabits = await AsyncStorage.getItem("habits");
@@ -70,7 +84,8 @@ const CreateHabitScreen = () => {
       habits.push(newHabit);
       await AsyncStorage.setItem("habits", JSON.stringify(habits));
 
-      if (newHabit.reminder && newHabit.reminderTime) {
+      // Only schedule reminders on non-web platforms
+      if (!isWeb && newHabit.reminder && newHabit.reminderTime) {
         await scheduleHabitReminder(newHabit);
       }
 
@@ -97,7 +112,7 @@ const CreateHabitScreen = () => {
       name,
       icon,
       frequency,
-      reminder,
+      reminder: isWeb ? false : reminder,  // Force reminders off on web
       reminderTime,
     };
 
@@ -110,7 +125,8 @@ const CreateHabitScreen = () => {
         await AsyncStorage.setItem("habits", JSON.stringify(habits));
       }
 
-      if (updatedHabit.reminder && updatedHabit.reminderTime) {
+      // Only reload reminders on non-web platforms
+      if (!isWeb && updatedHabit.reminder && updatedHabit.reminderTime) {
         await reloadHabitReminders(habits);
       }
 
@@ -169,11 +185,20 @@ const CreateHabitScreen = () => {
         </ThemedView>
 
         <ThemedView style={styles.reminderContainer}>
-          <ThemedText style={[styles.label, { color: textColor }]}>Reminder</ThemedText>
-          <Switch value={reminder} onValueChange={setReminder} />
+          <ThemedView style={styles.reminderLabelContainer}>
+            <ThemedText style={[styles.label, { color: textColor }]}>Reminder</ThemedText>
+            {isWeb && (
+              <ThemedText style={styles.disclaimer}>*Not available on web</ThemedText>
+            )}
+          </ThemedView>
+          <Switch 
+            value={isWeb ? false : reminder} 
+            onValueChange={setReminder}
+            disabled={isWeb}
+          />
         </ThemedView>
 
-        {reminder && (
+        {reminder && !isWeb && (
           <TimePicker
             isEditing={!!habitData}
             time={reminderTime || new Date()}
@@ -268,6 +293,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 20,
+  },
+  reminderLabelContainer: {
+    flexDirection: "column",
+  },
+  disclaimer: {
+    fontSize: 12,
+    marginTop: 5,
+    opacity: 0.5,
   },
   createButton: {
     padding: 15,

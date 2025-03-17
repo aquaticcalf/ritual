@@ -1,4 +1,4 @@
-import { StyleSheet, Alert, TouchableOpacity, Switch } from 'react-native';
+import { StyleSheet, Alert, TouchableOpacity, Switch, Platform } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -17,19 +17,36 @@ export default function Settings() {
 
   const [theme, setTheme] = useState('system');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
     const fetchNotificationStatus = async () => {
-      const storedHabits = await AsyncStorage.getItem('habits');
-      const habits = storedHabits ? JSON.parse(storedHabits) : [];
-      const notifications = await Notifications.getAllScheduledNotificationsAsync();
-      setNotificationsEnabled(notifications.length > 0);
+      try {
+        if (isWeb) {
+          // Web platforms don't support notifications, default to false
+          setNotificationsEnabled(false);
+          return;
+        }
+        
+        const storedHabits = await AsyncStorage.getItem('habits');
+        const habits = storedHabits ? JSON.parse(storedHabits) : [];
+        const notifications = await Notifications.getAllScheduledNotificationsAsync();
+        setNotificationsEnabled(notifications.length > 0);
+      } catch (error) {
+        console.error('Failed to fetch notification status:', error);
+        setNotificationsEnabled(false);
+      }
     };
 
     fetchNotificationStatus();
-  }, []);
+  }, [isWeb]);
 
   const handleReloadReminders = async () => {
+    if (isWeb) {
+      Alert.alert('Not Available', 'Notifications are not available on web platforms');
+      return;
+    }
+
     try {
       const storedHabits = await AsyncStorage.getItem('habits');
       const habits = storedHabits ? JSON.parse(storedHabits) : [];
@@ -42,6 +59,11 @@ export default function Settings() {
   };
 
   const handleToggleNotifications = async () => {
+    if (isWeb) {
+      Alert.alert('Not Available', 'Notifications are not available on web platforms');
+      return;
+    }
+
     try {
       const storedHabits = await AsyncStorage.getItem('habits');
       const habits = storedHabits ? JSON.parse(storedHabits) : [];
@@ -81,10 +103,26 @@ export default function Settings() {
         </ThemedView>
         <ThemedView style={styles.notificationContainer}>
           <ThemedText style={[styles.settingLabel, { color: textColor }]}>Notifications</ThemedText>
-          <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} />
+          <Switch 
+            value={notificationsEnabled} 
+            onValueChange={handleToggleNotifications}
+            disabled={isWeb} 
+          />
         </ThemedView>
-        <TouchableOpacity style={[styles.button, { backgroundColor: buttonColor }]} onPress={handleReloadReminders}>
-          <ThemedText style={[styles.buttonText, { color: backgroundColor } ]}>Reload Habit Reminders</ThemedText>
+        {isWeb && (
+          <ThemedText style={styles.disclaimer}>*Notifications are not available on web platforms</ThemedText>
+        )}
+        <TouchableOpacity 
+          style={[styles.button, { 
+            backgroundColor: buttonColor,
+            opacity: isWeb ? 0.5 : 1 
+          }]} 
+          onPress={handleReloadReminders}
+          disabled={isWeb}
+        >
+          <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>
+            Reload Habit Reminders
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ThemedView>

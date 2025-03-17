@@ -30,7 +30,7 @@ const HomeScreen = () => {
     const formatedToday = formatDate(today);
     if(habit.lastDone === formatedToday) return;
     const day = today.getDay();
-    const days = ['S', 'Sa', 'F', 'Th', 'W', 'T', 'M'];
+    const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
     if(habit.frequency.includes(days[day])) {
       if(isStreakAlive(habit.frequency, habit.lastDone)) {
         const updatedHabits = habits.map((h) => {
@@ -38,6 +38,13 @@ const HomeScreen = () => {
             h.currentStreak += 1;
             h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
             h.lastDone = formatedToday;
+            // update heatMap my finding cell with formatted date and toggling isDone
+            h.heatMap = h.heatMap.map((cell) => {
+              if(cell.date === formatedToday) {
+                cell.isDone = true;
+              }
+              return cell;
+            });
           }
           return h;
         });
@@ -49,6 +56,13 @@ const HomeScreen = () => {
             h.currentStreak = 1;
             h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
             h.lastDone = formatedToday;
+            // update heatMap my finding cell with formatted date and toggling isDone
+            h.heatMap = h.heatMap.map((cell) => {
+              if(cell.date === formatedToday) {
+                cell.isDone = true;
+              }
+              return cell;
+            });
           }
           return h;
         });

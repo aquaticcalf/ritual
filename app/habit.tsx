@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { Habit } from '@/lib/types';
+import { Cell, Habit } from '@/lib/types';
 import { reloadHabitReminders } from '@/lib/notifications';
+import { HeatMap } from '@/components/HeatMap';
 
 const HabitPage = () => {
   const { habit } = useLocalSearchParams();
@@ -17,6 +18,8 @@ const HabitPage = () => {
   const cardBackgroundColor = useThemeColor({}, 'card');
   const navigation = useNavigation();
   const router = useRouter();
+
+  const isWeb = Platform.OS === 'web';
 
   const handleDelete = async () => {
     if (habitData) {
@@ -37,15 +40,23 @@ const HabitPage = () => {
   };
 
   const confirmDelete = () => {
-    Alert.alert(
-      'Delete Habit',
-      'Are you sure you want to delete this habit?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', onPress: handleDelete, style: 'destructive' },
-      ],
-      { cancelable: true }
-    );
+    if (isWeb) {
+      // Use browser's confirm dialog for web
+      if (window.confirm('Are you sure you want to delete this habit?')) {
+        handleDelete();
+      }
+    } else {
+      // Use Alert for mobile platforms
+      Alert.alert(
+        'Delete Habit',
+        'Are you sure you want to delete this habit?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', onPress: handleDelete, style: 'destructive' },
+        ],
+        { cancelable: true }
+      );
+    }
   };
 
   useEffect(() => {
@@ -79,7 +90,7 @@ const HabitPage = () => {
         <ThemedView style={[styles.infoBox, { backgroundColor: cardBackgroundColor }]}>
           <ThemedText style={[styles.infoTitle, { color: textColor }]}>Frequency</ThemedText>
           <ThemedView style={[styles.frequencyContainer, { backgroundColor: cardBackgroundColor }]}>
-            {["M", "T", "W", "Th", "F", "Sa", "S"].map((day) => (
+            {["S", "M", "T", "W", "Th", "F", "Sa"].map((day) => (
               <ThemedView 
                 key={day}
                 style={[
@@ -130,6 +141,9 @@ const HabitPage = () => {
             <ThemedText style={styles.buttonText}> Delete</ThemedText>
           </TouchableOpacity>
         </ThemedView>
+
+        {/* dummy heatMap */}
+        <HeatMap year={new Date().getFullYear()} heatMap={habitData.heatMap} />
       </ScrollView>
     </ThemedView>
   );
@@ -218,7 +232,7 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 14,
-  },
+  }
 });
 
 export default HabitPage;

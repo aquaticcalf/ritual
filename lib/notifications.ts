@@ -1,8 +1,16 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { Habit } from './types';
 import { formatDate } from './utils';
 
+const isWeb = Platform.OS === 'web';
+
 export async function requestNotificationPermissions() {
+  if (isWeb) {
+    console.log('Notifications not available on web platform');
+    return;
+  }
+  
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== 'granted') {
     alert('You need to enable notifications in settings');
@@ -10,6 +18,11 @@ export async function requestNotificationPermissions() {
 }
 
 export async function reloadHabitReminders(habits: Habit[]) {
+  if (isWeb) {
+    console.log('Notification scheduling not available on web platform');
+    return;
+  }
+  
   const notifications = await Notifications.getAllScheduledNotificationsAsync();
   for (const notification of notifications) {
     if (notification.content.title === 'Habit Reminder') {
@@ -24,6 +37,11 @@ export async function reloadHabitReminders(habits: Habit[]) {
 }
 
 export async function turnOffAllHabitReminders() {
+  if (isWeb) {
+    console.log('Notification scheduling not available on web platform');
+    return;
+  }
+  
   const notifications = await Notifications.getAllScheduledNotificationsAsync();
   for (const notification of notifications) {
     if (notification.content.title === 'Habit Reminder') {
@@ -33,6 +51,11 @@ export async function turnOffAllHabitReminders() {
 }
 
 export async function turnOnAllHabitReminders(habits: Habit[]) {
+  if (isWeb) {
+    console.log('Notification scheduling not available on web platform');
+    return;
+  }
+  
   for (const habit of habits) {
     if (habit.reminder && habit.reminderTime) {
       await scheduleHabitReminder(habit);
@@ -41,6 +64,11 @@ export async function turnOnAllHabitReminders(habits: Habit[]) {
 }
 
 export async function scheduleHabitReminder(habit: Habit) {
+  if (isWeb) {
+    console.log('Notification scheduling not available on web platform');
+    return;
+  }
+  
   const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
   if (!habit.reminderTime) {
     throw new Error('Reminder time is not defined');
