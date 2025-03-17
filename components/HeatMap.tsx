@@ -36,7 +36,7 @@ const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number):
   return heatMap
     .filter(cell => {
       const dateInfo = extractMonthAndDay(cell.date);
-      return dateInfo && dateInfo.month === targetMonth && cell.isDone;
+      return dateInfo && dateInfo.month === targetMonth;
     })
     .map(cell => {
       const dateInfo = extractMonthAndDay(cell.date);

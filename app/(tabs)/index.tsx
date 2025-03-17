@@ -33,36 +33,26 @@ const HomeScreen = () => {
     const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
     if(habit.frequency.includes(days[day])) {
       if(isStreakAlive(habit.frequency, habit.lastDone)) {
+        console.log('Streak is alive');
         const updatedHabits = habits.map((h) => {
           if (h.id === id) {
             h.currentStreak += 1;
             h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
             h.lastDone = formatedToday;
-            // update heatMap my finding cell with formatted date and toggling isDone
-            h.heatMap = h.heatMap.map((cell) => {
-              if(cell.date === formatedToday) {
-                cell.isDone = true;
-              }
-              return cell;
-            });
+            h.heatMap.push({ day: days[day], date: formatedToday });
           }
           return h;
         });
         setHabits(updatedHabits);
         await AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
       } else {
+        console.log('Streak is dead');
         const updatedHabits = habits.map((h) => {
           if (h.id === id) {
             h.currentStreak = 1;
             h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
             h.lastDone = formatedToday;
-            // update heatMap my finding cell with formatted date and toggling isDone
-            h.heatMap = h.heatMap.map((cell) => {
-              if(cell.date === formatedToday) {
-                cell.isDone = true;
-              }
-              return cell;
-            });
+            h.heatMap.push({ day: days[day], date: formatedToday });
           }
           return h;
         });

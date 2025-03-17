@@ -1,7 +1,6 @@
 export type Cell = {
-    day: string;
-    date: string;
-    isDone: boolean;
+    day: string; // 'S', 'M', 'T', 'W', 'Th', 'F', 'Sa'
+    date: string; // 'dd/mm/yyyy'
 };
 
 export type Habit = {
