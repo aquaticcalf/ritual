@@ -1,4 +1,3 @@
-
 export interface Frequency extends Array<string> {}
 
 // Helper function to format date to dd/mm/yyyy
@@ -10,16 +9,27 @@ export const formatDate = (date: Date): string => {
 }
 
 export const lastSupposedToDoDate = (frequency: Frequency): string => {
-  const day: number = new Date().getDay();
-  // compare the last 7 days with the habit frequency and return the date of the last day the habit is supposed to be done
-  const dys: Array<string> = ['S', 'Sa', 'F', 'Th', 'W', 'T', 'M'];
+  // Use standard day codes matching JavaScript's getDay() (0=Sunday, 6=Saturday)
+  const dayNames = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+  const today = new Date();
+  const currentDay = today.getDay();
+  
+  // Look backward up to 7 days to find the most recent scheduled day
   for (let i = 1; i <= 7; i++) {
-    if (frequency.includes(dys[(day + i) % 7])) {
-      const date = new Date(new Date().setDate(new Date().getDate() - i));
-      return formatDate(date);
+    // Calculate previous day index (adding 7 to avoid negative numbers)
+    const prevDayIndex = (currentDay - i + 7) % 7;
+    
+    // Check if this previous day is in the habit's frequency
+    if (frequency.includes(dayNames[prevDayIndex])) {
+      // Calculate the date i days ago
+      const prevDate = new Date();
+      prevDate.setDate(today.getDate() - i);
+      return formatDate(prevDate);
     }
   }
-  const today = new Date();
+  
+  // If no scheduled day found in the past week, return today as fallback
+  // This should rarely happen given your assumption that frequency is never empty
   return formatDate(today);
 }
 

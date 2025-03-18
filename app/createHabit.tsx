@@ -54,6 +54,12 @@ const CreateHabitScreen = () => {
   }, [reminder]);
 
   const handleCreateHabit = async () => {
+    // Check if frequency is empty
+    if (frequency.length === 0) {
+      alert("Please select at least one day for your habit");
+      return;
+    }
+
     let heatMap: Array<Cell> = [];
     const iconToUse = !icon || icon === "" ? "🔥" : icon;
 
@@ -106,6 +112,12 @@ const CreateHabitScreen = () => {
 
   const handleEditHabit = async () => {
     if (!habitData) return;
+
+    // Check if frequency is empty
+    if (frequency.length === 0) {
+      alert("Please select at least one day for your habit");
+      return;
+    }
 
     const updatedHabit = {
       ...habitData,
