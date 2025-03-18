@@ -98,7 +98,7 @@ export async function scheduleHabitReminder(habit: Habit) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Habit Reminder',
-        body: `Save your ${habit.currentStreak} days streak, Time to ${habit.name}`,
+        body: `Save your streak, Time to ${habit.name}`,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
