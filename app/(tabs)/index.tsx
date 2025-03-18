@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import { FlatList, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -9,15 +9,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { formatDate, isStreakAlive } from "@/lib/utils";
 import { requestNotificationPermissions } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
+import * as Haptics from 'expo-haptics';
 
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [lastUpdatedHabitId, setLastUpdatedHabitId] = useState<string | null>(null);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const iconColor = useThemeColor({}, 'icon');
   const buttonColor = useThemeColor({}, 'tint');
   const habitItemBackgroundColor = useThemeColor({}, 'card');
+  const scaleAnimations = useRef<{[key: string]: Animated.Value}>({});
 
   interface HandleMarkAsDoneParams {
     id: string;
@@ -32,6 +35,36 @@ const HomeScreen = () => {
     const day = today.getDay();
     const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
     if(habit.frequency.includes(days[day])) {
+      // Provide haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      // Set the ID to trigger visual feedback
+      setLastUpdatedHabitId(id);
+      
+      // Get or create the animation value for this habit
+      if (!scaleAnimations.current[id]) {
+        scaleAnimations.current[id] = new Animated.Value(1);
+      }
+      
+      // Animate scale up
+      Animated.sequence([
+        Animated.spring(scaleAnimations.current[id], {
+          toValue: 1.05,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnimations.current[id], {
+          toValue: 1,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        })
+      ]).start();
+      
+      // Clear the updated ID after animation completes
+      setTimeout(() => setLastUpdatedHabitId(null), 500);
+      
       if(isStreakAlive(habit.frequency, habit.lastDone)) {
         console.log('Streak is alive');
         const updatedHabits = habits.map((h) => {
@@ -100,17 +133,42 @@ const HomeScreen = () => {
         <FlatList
           data={habits}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={[styles.habitItem, { backgroundColor: habitItemBackgroundColor }]}
-              onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
-              onLongPress={() => handleMarkAsDone({ id: item.id })}
-            >
-              <ThemedText style={[styles.icon, { color: iconColor }]}>{item.icon}</ThemedText>
-              <ThemedText style={[styles.habitText, { color: textColor }]}>{item.name}</ThemedText>
-              <ThemedText style={[styles.streak, { color: textColor }]}>{item.currentStreak} 🔥</ThemedText>
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => {
+            // Create animation value for this item if it doesn't exist
+            if (!scaleAnimations.current[item.id]) {
+              scaleAnimations.current[item.id] = new Animated.Value(1);
+            }
+            
+            return (
+              <Animated.View style={{
+                transform: [{ scale: scaleAnimations.current[item.id] }],
+                marginBottom: 10,
+                borderRadius: 10,
+              }}>
+                <TouchableOpacity 
+                  style={[
+                    styles.habitItem, 
+                    { backgroundColor: habitItemBackgroundColor }
+                  ]}
+                  onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
+                  onLongPress={() => handleMarkAsDone({ id: item.id })}
+                >
+                  <ThemedText style={[
+                    styles.icon, 
+                    { color: iconColor }
+                  ]}>{item.icon}</ThemedText>
+                  <ThemedText style={[
+                    styles.habitText, 
+                    { color: textColor }
+                  ]}>{item.name}</ThemedText>
+                  <ThemedText style={[
+                    styles.streak, 
+                    { color: textColor }
+                  ]}>{item.currentStreak} 🔥</ThemedText>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          }}
         />
       )}
       <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>

@@ -68,6 +68,10 @@ export async function scheduleHabitReminder(habit: Habit) {
     console.log('Notification scheduling not available on web platform');
     return;
   }
+
+  if(!habit.reminder) {
+    return;
+  }
   
   const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
   if (!habit.reminderTime) {

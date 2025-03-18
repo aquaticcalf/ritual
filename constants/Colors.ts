@@ -1,28 +1,27 @@
 /**
  * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#8A4FFF';  // Vibrant purple for light mode
+const tintColorDark = '#B088FF';   // Brighter neon purple for dark mode
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    text: '#2D2D2D',         // Dark charcoal
+    background: '#F6F4FF',   // Very light lavender background
+    tint: tintColorLight,    
+    icon: '#5B3E96',         // Deep plum for icons
+    tabIconDefault: '#9E8BC4',
     tabIconSelected: tintColorLight,
-    card: '#f0f0f0',
+    card: '#FFFFFF',         // White cards with light lavender shadow
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    text: '#F0F0F0',         // Soft white text
+    background: '#18141F',   // Deep charcoal with purple undertones
+    tint: tintColorDark,     
+    icon: '#C4B5FF',         // Light lavender icons
+    tabIconDefault: '#7F6BA8',
     tabIconSelected: tintColorDark,
-    card: '#1C1C1E',
+    card: '#241F2F',         // Slightly lighter dark purple
   },
 };
