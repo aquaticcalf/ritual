@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable } from "react-native";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -10,6 +10,7 @@ import { formatDate, isStreakAlive } from "@/lib/utils";
 import { requestNotificationPermissions } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
 import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -31,12 +32,25 @@ const HomeScreen = () => {
     if (!habit) return;
     const today = new Date();
     const formatedToday = formatDate(today);
-    if(habit.lastDone === formatedToday) return;
+    
+    if(habit.lastDone === formatedToday) {
+      Toast.show({
+        type: 'info',
+        text1: 'Already completed',
+        text2: `You've already marked "${habit.name}" as done today!`,
+        position: 'bottom'
+      });
+      return;
+    }
+    
     const day = today.getDay();
     const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+    
     if(habit.frequency.includes(days[day])) {
-      // Provide haptic feedback
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Provide haptic feedback only on native platforms
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       
       // Set the ID to trigger visual feedback
       setLastUpdatedHabitId(id);
@@ -65,6 +79,14 @@ const HomeScreen = () => {
       // Clear the updated ID after animation completes
       setTimeout(() => setLastUpdatedHabitId(null), 500);
       
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Marked as done!',
+        text2: `Great job completing "${habit.name}" today!`,
+        position: 'bottom'
+      });
+      
       if(isStreakAlive(habit.frequency, habit.lastDone)) {
         console.log('Streak is alive');
         const updatedHabits = habits.map((h) => {
@@ -91,6 +113,19 @@ const HomeScreen = () => {
         });
         setHabits(updatedHabits);
         await AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
+      }
+    } else {
+      // Show error toast when trying to mark a habit as done on an unscheduled day
+      Toast.show({
+        type: 'error',
+        text1: 'Not scheduled for today',
+        text2: `"${habit.name}" is not scheduled for today`,
+        position: 'bottom'
+      });
+      
+      // Only trigger haptic feedback on native platforms
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     }
   };
@@ -181,6 +216,7 @@ const HomeScreen = () => {
       <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>
         <FontAwesome name="plus" size={24} color={backgroundColor} />
       </TouchableOpacity>
+      <Toast />
     </ThemedView>
   );
 };

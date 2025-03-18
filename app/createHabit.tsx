@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { reloadHabitReminders, scheduleHabitReminder } from '@/lib/notifications';
 import { Cell, Habit } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import Toast from 'react-native-toast-message'; // Make sure this import is present
 
 const CreateHabitScreen = () => {
   const { habit } = useLocalSearchParams();
@@ -53,10 +53,50 @@ const CreateHabitScreen = () => {
     }
   }, [reminder]);
 
-  const handleCreateHabit = async () => {
+  // Validation helper function
+  const validateForm = () => {
+    // Check if name is empty
+    if (!name || name.trim() === '') {
+      Toast.show({
+        type: 'error',
+        text1: 'Name is required',
+        text2: 'Please enter a name for your habit',
+        position: 'bottom',
+        visibilityTime: 3000,
+      });
+      return false;
+    }
+
     // Check if frequency is empty
     if (frequency.length === 0) {
-      alert("Please select at least one day for your habit");
+      Toast.show({
+        type: 'error',
+        text1: 'Frequency is required',
+        text2: 'Please select at least one day for your habit',
+        position: 'bottom',
+        visibilityTime: 3000,
+      });
+      return false;
+    }
+
+    // Check if reminder is enabled but no time selected
+    if (reminder && !reminderTime && !isWeb) {
+      Toast.show({
+        type: 'error',
+        text1: 'Reminder time missing',
+        text2: 'Please set a time for your reminder',
+        position: 'bottom',
+        visibilityTime: 3000,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCreateHabit = async () => {
+    // Validate the form
+    if (!validateForm()) {
       return;
     }
 
@@ -82,8 +122,6 @@ const CreateHabitScreen = () => {
       setIcon("🔥");
     }
 
-    console.log(newHabit);
-
     try {
       const existingHabits = await AsyncStorage.getItem("habits");
       const habits = existingHabits ? JSON.parse(existingHabits) : [];
@@ -95,6 +133,15 @@ const CreateHabitScreen = () => {
         await scheduleHabitReminder(newHabit);
       }
 
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Habit created',
+        text2: `${name} has been added to your habits`,
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+
       // Clear the form
       setName("");
       setIcon("");
@@ -103,19 +150,34 @@ const CreateHabitScreen = () => {
       setReminderTime(undefined);
 
       // Redirect to home screen
-      router.push("/");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
 
     } catch (error) {
       console.error("Error saving habit:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to save habit',
+        text2: 'Please try again',
+        position: 'bottom',
+      });
     }
   };
 
   const handleEditHabit = async () => {
-    if (!habitData) return;
+    if (!habitData) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Habit data missing',
+        position: 'bottom',
+      });
+      return;
+    }
 
-    // Check if frequency is empty
-    if (frequency.length === 0) {
-      alert("Please select at least one day for your habit");
+    // Validate the form
+    if (!validateForm()) {
       return;
     }
 
@@ -132,9 +194,18 @@ const CreateHabitScreen = () => {
       const existingHabits = await AsyncStorage.getItem("habits");
       const habits = existingHabits ? JSON.parse(existingHabits) : [];
       const habitIndex = habits.findIndex((h: any) => h.id === habitData.id);
+      
       if (habitIndex > -1) {
         habits[habitIndex] = updatedHabit;
         await AsyncStorage.setItem("habits", JSON.stringify(habits));
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to update habit',
+          text2: 'Habit not found in storage',
+          position: 'bottom',
+        });
+        return;
       }
 
       // Only reload reminders on non-web platforms
@@ -142,11 +213,28 @@ const CreateHabitScreen = () => {
         await reloadHabitReminders(habits);
       }
 
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Habit updated',
+        text2: `${name} has been updated successfully`,
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+
       // Redirect to home screen
-      router.push("/");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
 
     } catch (error) {
       console.error("Error updating habit:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to update habit',
+        text2: 'Please try again',
+        position: 'bottom',
+      });
     }
   };
 
@@ -239,6 +327,9 @@ const CreateHabitScreen = () => {
         onClose={() => setIsEmojiPickerVisible(false)}
         onSelect={(emoji) => setIcon(emoji)}
       />
+      
+      {/* Add the Toast component here */}
+      <Toast />
     </ThemedView>
   );
 };
