@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -133,6 +133,7 @@ const HomeScreen = () => {
         <FlatList
           data={habits}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 5 }} // Add horizontal padding to FlatList content
           renderItem={({ item }) => {
             // Create animation value for this item if it doesn't exist
             if (!scaleAnimations.current[item.id]) {
@@ -144,14 +145,20 @@ const HomeScreen = () => {
                 transform: [{ scale: scaleAnimations.current[item.id] }],
                 marginBottom: 10,
                 borderRadius: 10,
+                overflow: 'visible', // Allow content to overflow container bounds
+                // Add small horizontal margin to give room for scaling
+                marginHorizontal: 3,
               }}>
-                <TouchableOpacity 
-                  style={[
-                    styles.habitItem, 
-                    { backgroundColor: habitItemBackgroundColor }
+                <Pressable 
+                  style={({ pressed }) => [
+                    styles.habitItem,
+                    { backgroundColor: habitItemBackgroundColor },
+                    // Only apply opacity when it's a regular press, not during long press
+                    pressed ? { opacity: 0.7 } : {}
                   ]}
                   onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
                   onLongPress={() => handleMarkAsDone({ id: item.id })}
+                  delayLongPress={500} // Standard long press delay
                 >
                   <ThemedText style={[
                     styles.icon, 
@@ -165,7 +172,7 @@ const HomeScreen = () => {
                     styles.streak, 
                     { color: textColor }
                   ]}>{item.currentStreak} 🔥</ThemedText>
-                </TouchableOpacity>
+                </Pressable>
               </Animated.View>
             );
           }}
