@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { ThemedView } from "./ThemedView";
 import MonthComponent from "./Month";
 import { StyleSheet, View, ScrollView } from "react-native";
@@ -47,16 +47,37 @@ const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number):
 
 export function HeatMap({ year = new Date().getFullYear(), heatMap = [] }: HeatMapProps) {
   const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  // Create a ref for the ScrollView
+  const scrollViewRef = useRef<ScrollView>(null);
+  // Get current month
+  const currentMonth = new Date().getMonth();
 
   // Calculate first day of each month
   const getFirstDayOfMonth = (month: number) => {
     return new Date(year, month, 1).getDay();
   };
 
+  // Scroll to current month when component mounts
+  useEffect(() => {
+    // Add a small delay to ensure the ScrollView has rendered
+    const timer = setTimeout(() => {
+      if (scrollViewRef.current) {
+        // Calculate position to scroll to - estimate width of each month container + margin
+        const MONTH_WIDTH = 120; // Approximate width of each month container including margin
+        const scrollToX = currentMonth * MONTH_WIDTH;
+        
+        scrollViewRef.current.scrollTo({ x: scrollToX, animated: true });
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [currentMonth]);
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Heat Map for {year}</ThemedText>
       <ScrollView 
+        ref={scrollViewRef}
         horizontal={true}
         showsHorizontalScrollIndicator={true}
         contentContainerStyle={styles.scrollContent}
@@ -102,6 +123,7 @@ const styles = StyleSheet.create({
   monthWrapper: {
     marginRight: 20,
     alignItems: "center",
+    width: 100, // Set a consistent width for month container
   },
   monthName: {
     fontSize: 14,

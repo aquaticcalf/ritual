@@ -318,7 +318,7 @@ const CreateHabitScreen = () => {
         <ThemedText
           style={[styles.createButtonText, { color: backgroundColor }]}
         >
-          {habitData ? "Edit Habit" : "Create Habit"}
+          {habitData ? "Update Habit" : "Create Habit"}
         </ThemedText>
       </TouchableOpacity>
 
