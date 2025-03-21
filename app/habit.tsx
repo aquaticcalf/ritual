@@ -142,8 +142,11 @@ const HabitPage = () => {
           </TouchableOpacity>
         </ThemedView>
 
-        {/* dummy heatMap */}
-        <HeatMap year={new Date().getFullYear()} heatMap={habitData.heatMap} />
+        <HeatMap 
+          year={new Date().getFullYear()} 
+          heatMap={habitData.heatMap} 
+          createdOn={habitData.createdOn} 
+        />
       </ScrollView>
     </ThemedView>
   );

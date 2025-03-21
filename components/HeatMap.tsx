@@ -8,6 +8,7 @@ import { Cell } from "@/lib/types";
 interface HeatMapProps {
   year?: number;
   heatMap?: Cell[];
+  createdOn?: string; // Add createdOn prop
 }
 
 // Month names for display
@@ -29,6 +30,20 @@ const extractMonthAndDay = (dateString: string): { month: number, day: number } 
   return { month, day };
 };
 
+// Extract creation date info
+const extractCreationInfo = (createdOn: string | undefined): { year: number, month: number, day: number } | null => {
+  if (!createdOn) return null;
+  
+  const date = new Date(createdOn);
+  if (isNaN(date.getTime())) return null;
+  
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+    day: date.getDate()
+  };
+};
+
 // For a given month, get the array of days that should be marked green
 const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number): number[] => {
   if (!heatMap || !heatMap.length) return [];
@@ -45,12 +60,15 @@ const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number):
     .filter(day => day > 0);
 };
 
-export function HeatMap({ year = new Date().getFullYear(), heatMap = [] }: HeatMapProps) {
+export function HeatMap({ year = new Date().getFullYear(), heatMap = [], createdOn }: HeatMapProps) {
   const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   // Create a ref for the ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
   // Get current month
   const currentMonth = new Date().getMonth();
+  
+  // Get creation date info
+  const creationInfo = extractCreationInfo(createdOn);
 
   // Calculate first day of each month
   const getFirstDayOfMonth = (month: number) => {
@@ -86,6 +104,18 @@ export function HeatMap({ year = new Date().getFullYear(), heatMap = [] }: HeatM
           // Get green days for this specific month from the heatMap
           const greenDays = getGreenDaysForMonth(heatMap, index);
           
+          // Calculate if this month is before creation date
+          const isBeforeCreationMonth = creationInfo && 
+            (year < creationInfo.year || 
+             (year === creationInfo.year && index < creationInfo.month));
+          
+          // For same month as creation, pass the day to show which days should be dimmed
+          const creationDay = (creationInfo && 
+                              year === creationInfo.year && 
+                              index === creationInfo.month) 
+                              ? creationInfo.day 
+                              : -1;
+          
           return (
             <View style={styles.monthWrapper} key={index}>
               <ThemedText style={styles.monthName}>{monthName}</ThemedText>
@@ -95,6 +125,8 @@ export function HeatMap({ year = new Date().getFullYear(), heatMap = [] }: HeatM
                   firstDay={getFirstDayOfMonth(index)}
                   isLeapYear={isLeapYear}
                   greens={greenDays}
+                  isBeforeCreationMonth={isBeforeCreationMonth ?? undefined}
+                  creationDay={creationDay}
                 />
               </View>
             </View>

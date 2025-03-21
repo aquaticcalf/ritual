@@ -12,6 +12,10 @@ interface MonthComponentProps {
   isLeapYear: boolean;
   /** List of dates to highlight in green */
   greens: number[];
+  /** If true, this entire month is before the habit was created */
+  isBeforeCreationMonth?: boolean;
+  /** If > 0, days before this day in this month should be dimmed */
+  creationDay?: number;
 }
 
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -22,8 +26,12 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
   firstDay,
   isLeapYear,
   greens,
+  isBeforeCreationMonth = false,
+  creationDay = -1,
 }) => {
   const backgroundColor = useThemeColor({}, 'background');
+  const tintColor = useThemeColor({}, 'tint');
+  
   // Determine number of days in the specified month
   const daysInMonth = isLeapYear
     ? LEAP_YEAR_DAYS_IN_MONTH[month]
@@ -50,7 +58,13 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       {cells.map((day, index) => {
+        // Determine if this cell is before the creation date
+        const isBeforeCreation = isBeforeCreationMonth || 
+          (day !== null && creationDay > 0 && day < creationDay);
+        
+        // Determine cell color
         const isGreen = day !== null && greens.includes(day);
+        
         return (
           <ThemedView
             key={index}
@@ -58,12 +72,12 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
               styles.cell,
               day
                 ? isGreen
-                  ? styles.greenCell
-                  : styles.grayCell
+                  ? [styles.greenCell, { backgroundColor: tintColor, opacity: isBeforeCreation ? 0.3 : 1 }]
+                  : [styles.grayCell, { opacity: isBeforeCreation ? 0.3 : 1 }]
                 : styles.transparentCell,
             ]}
           >
-            {day && <Text style={styles.text}>{day}</Text>}
+            {day && <Text style={[styles.text, { opacity: isBeforeCreation ? 0.3 : 1 }]}>{day}</Text>}
           </ThemedView>
         );
       })}
@@ -78,7 +92,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
 
     // Adjust these so 7 items fit vertically, 6 columns horizontally
-    // Example sizes (feel free to tweak):
     height: 7 * 14, // Enough height for 7 cells + margins
     width: 6 * 14,  // Enough width for 6 columns + margins
   },
@@ -94,7 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: "gray",
   },
   greenCell: {
-    backgroundColor: "green",
+    backgroundColor: "green", // This will be overridden by the tintColor
   },
   transparentCell: {
     backgroundColor: "transparent",
