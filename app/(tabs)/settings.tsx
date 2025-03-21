@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { reloadHabitReminders, turnOffAllHabitReminders, turnOnAllHabitReminders } from '@/lib/notifications';
+import { ThemePreference, getThemePreference, saveThemePreference } from '@/lib/themeManager';
+import Toast from 'react-native-toast-message';
 
 export default function Settings() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -15,9 +17,19 @@ export default function Settings() {
   const buttonColor = useThemeColor({}, 'tint');
   const habitItemBackgroundColor = useThemeColor({}, 'card');
 
-  const [theme, setTheme] = useState('system');
+  const [theme, setTheme] = useState<ThemePreference>('system');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const isWeb = Platform.OS === 'web';
+
+  useEffect(() => {
+    // Load saved theme preference
+    const loadTheme = async () => {
+      const savedTheme = await getThemePreference();
+      setTheme(savedTheme);
+    };
+    
+    loadTheme();
+  }, []);
 
   useEffect(() => {
     const fetchNotificationStatus = async () => {
@@ -40,6 +52,19 @@ export default function Settings() {
 
     fetchNotificationStatus();
   }, [isWeb]);
+
+  const handleThemeChange = async (newTheme: string) => {
+    await saveThemePreference(newTheme as ThemePreference);
+    setTheme(newTheme as ThemePreference);
+    
+    Toast.show({
+      type: 'success',
+      text1: 'Theme updated',
+      text2: `App theme set to ${newTheme}`,
+      position: 'bottom',
+      visibilityTime: 2000,
+    });
+  };
 
   const handleReloadReminders = async () => {
     if (isWeb) {
@@ -85,21 +110,29 @@ export default function Settings() {
       <ThemedView style={styles.settingsContainer}>
         <ThemedText style={[styles.settingLabel, { color: textColor }]}>Theme</ThemedText>
         <ThemedView style={[styles.themeContainer, { backgroundColor: habitItemBackgroundColor }]}>
-          <RadioButton.Group onValueChange={newValue => setTheme(newValue)} value={theme}>
-            <ThemedView style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}>
+          <RadioButton.Group onValueChange={handleThemeChange} value={theme}>
+            <TouchableOpacity 
+              onPress={() => handleThemeChange('system')}
+              style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
+            >
               <ThemedText style={{ color: textColor }}>System</ThemedText>
               <RadioButton value="system" color={iconColor} />
-            </ThemedView>
-            <ThemedView style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => handleThemeChange('light')}
+              style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
+            >
               <ThemedText style={{ color: textColor }}>Light</ThemedText>
               <RadioButton value="light" color={iconColor} />
-            </ThemedView>
-            <ThemedView style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => handleThemeChange('dark')}
+              style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
+            >
               <ThemedText style={{ color: textColor }}>Dark</ThemedText>
               <RadioButton value="dark" color={iconColor} />
-            </ThemedView>
+            </TouchableOpacity>
           </RadioButton.Group>
-          <ThemedText style={styles.disclaimer}>*Theme setting is currently not working</ThemedText>
         </ThemedView>
         <ThemedView style={styles.notificationContainer}>
           <ThemedText style={[styles.settingLabel, { color: textColor }]}>Notifications</ThemedText>
@@ -125,6 +158,7 @@ export default function Settings() {
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
+      <Toast />
     </ThemedView>
   );
 }
