@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform } from "react-native";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -14,7 +14,6 @@ import Toast from 'react-native-toast-message';
 
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [lastUpdatedHabitId, setLastUpdatedHabitId] = useState<string | null>(null);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -33,13 +32,65 @@ const HomeScreen = () => {
     const today = new Date();
     const formatedToday = formatDate(today);
     
+    // If the habit is already marked as done today, ask if user wants to unmark it
     if(habit.lastDone === formatedToday) {
-      Toast.show({
-        type: 'info',
-        text1: 'Already completed',
-        text2: `You've already marked "${habit.name}" as done today!`,
-        position: 'bottom'
-      });
+      // Create confirmation dialog based on platform
+      const unmarkHabit = () => {
+        // Provide haptic feedback for unmarking
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        }
+        
+        const updatedHabits = habits.map((h) => {
+          if (h.id === id) {
+            // Decrease streak by 1
+            h.currentStreak = Math.max(0, h.currentStreak - 1);
+            
+            // Restore previous best streak if available
+            if (h.prevBestStreak !== undefined) {
+              h.bestStreak = h.prevBestStreak;
+            }
+            
+            // Remove the last entry from heatMap (today's entry)
+            const newHeatMap = [...h.heatMap];
+            newHeatMap.pop();
+            h.heatMap = newHeatMap;
+            
+            // Update lastDone to the date of the new last entry in heatMap, or empty if no entries
+            h.lastDone = newHeatMap.length > 0 ? newHeatMap[newHeatMap.length - 1].date : "";
+          }
+          return h;
+        });
+        
+        // Update state and storage
+        setHabits(updatedHabits);
+        AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
+        
+        // Show success toast for unmarking
+        Toast.show({
+          type: 'success',
+          text1: 'Habit unmarked',
+          text2: `"${habit.name}" has been unmarked for today`,
+          position: 'bottom'
+        });
+      };
+      
+      if (Platform.OS === 'web') {
+        // For web, use browser's confirm dialog
+        if (window.confirm(`Do you want to unmark "${habit.name}" as done for today?`)) {
+          unmarkHabit();
+        }
+      } else {
+        // For mobile, use React Native Alert
+        Alert.alert(
+          'Unmark Habit',
+          `Do you want to unmark "${habit.name}" as done for today?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Unmark', onPress: unmarkHabit }
+          ]
+        );
+      }
       return;
     }
     
@@ -51,9 +102,6 @@ const HomeScreen = () => {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      
-      // Set the ID to trigger visual feedback
-      setLastUpdatedHabitId(id);
       
       // Get or create the animation value for this habit
       if (!scaleAnimations.current[id]) {
@@ -76,9 +124,6 @@ const HomeScreen = () => {
         })
       ]).start();
       
-      // Clear the updated ID after animation completes
-      setTimeout(() => setLastUpdatedHabitId(null), 500);
-      
       // Show success toast
       Toast.show({
         type: 'success',
@@ -91,6 +136,8 @@ const HomeScreen = () => {
         console.log('Streak is alive');
         const updatedHabits = habits.map((h) => {
           if (h.id === id) {
+            // Save the previous best streak before updating
+            h.prevBestStreak = h.bestStreak;
             h.currentStreak += 1;
             h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
             h.lastDone = formatedToday;
@@ -104,6 +151,8 @@ const HomeScreen = () => {
         console.log('Streak is dead');
         const updatedHabits = habits.map((h) => {
           if (h.id === id) {
+            // Save the previous best streak before updating
+            h.prevBestStreak = h.bestStreak;
             h.currentStreak = 1;
             h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
             h.lastDone = formatedToday;
@@ -175,6 +224,10 @@ const HomeScreen = () => {
               scaleAnimations.current[item.id] = new Animated.Value(1);
             }
             
+            // Check if habit is done today
+            const today = formatDate(new Date());
+            const isCompletedToday = item.lastDone === today;
+            
             return (
               <Animated.View style={{
                 transform: [{ scale: scaleAnimations.current[item.id] }],
@@ -188,6 +241,8 @@ const HomeScreen = () => {
                   style={({ pressed }) => [
                     styles.habitItem,
                     { backgroundColor: habitItemBackgroundColor },
+                    // Apply completed habit style if done today
+                    isCompletedToday ? styles.completedHabit : {},
                     // Only apply opacity when it's a regular press, not during long press
                     pressed ? { opacity: 0.7 } : {}
                   ]}
@@ -201,7 +256,9 @@ const HomeScreen = () => {
                   ]}>{item.icon}</ThemedText>
                   <ThemedText style={[
                     styles.habitText, 
-                    { color: textColor }
+                    { color: textColor },
+                    // Apply text strikethrough if completed today
+                    isCompletedToday ? styles.completedText : {}
                   ]}>{item.name}</ThemedText>
                   <ThemedText style={[
                     styles.streak, 
@@ -267,6 +324,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 4,
+  },
+  completedText: {
+    textDecorationLine: 'line-through',
+    opacity: 0.6,
+  },
+  completedHabit: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50', // Green success color
   },
 });
 

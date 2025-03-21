@@ -106,12 +106,13 @@ const CreateHabitScreen = () => {
     const newHabit: Habit = {
       id: Date.now().toString(),
       name,
-      icon: iconToUse, // Use the local variable instead of state
+      icon: iconToUse,
       frequency,
-      reminder: isWeb ? false : reminder,  // Force reminders off on web
+      reminder: isWeb ? false : reminder,
       reminderTime,
       currentStreak: 0,
       bestStreak: 0,
+      prevBestStreak: 0,
       lastDone: "",
       createdOn: new Date().toISOString(),
       heatMap

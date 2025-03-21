@@ -4,15 +4,16 @@ export type Cell = {
 };
 
 export type Habit = {
-	id: string;
-	name: string;
-	icon: string;
-	frequency: string[];
-	reminder: boolean;
-	reminderTime?: Date;
-	currentStreak: number;
-	bestStreak: number;
-	lastDone: string;
-	createdOn: string;
-	heatMap: Cell[];
+    id: string;
+    name: string;
+    icon: string;
+    frequency: string[];
+    reminder: boolean;
+    reminderTime?: Date;
+    currentStreak: number;
+    bestStreak: number;
+    prevBestStreak?: number; // Added to keep track of previous best streak
+    lastDone: string;
+    createdOn: string;
+    heatMap: Cell[];
 };
