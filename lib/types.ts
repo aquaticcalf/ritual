@@ -13,7 +13,7 @@ export type Habit = {
     currentStreak: number;
     bestStreak: number;
     prevBestStreak?: number; // Added to keep track of previous best streak
-    lastDone: string;
-    createdOn: string;
+    lastDone: string; // 'dd/mm/yyyy'
+    createdOn: string; // ISO string
     heatMap: Cell[];
 };

@@ -48,7 +48,7 @@ const HomeScreen = () => {
             
             // Restore previous best streak if available
             if (h.prevBestStreak !== undefined) {
-              h.bestStreak = h.prevBestStreak;
+              h.bestStreak = Math.max(h.prevBestStreak, h.currentStreak);
             }
             
             // Remove the last entry from heatMap (today's entry)

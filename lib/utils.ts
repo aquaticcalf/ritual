@@ -1,3 +1,5 @@
+import { Cell } from "./types";
+
 export interface Frequency extends Array<string> {}
 
 // Helper function to format date to dd/mm/yyyy
@@ -39,4 +41,52 @@ export const isStreakAlive = (frequency: Frequency, lastDone: string) => {
 
   const lastToDo = lastSupposedToDoDate(frequency);
   return lastDone == lastToDo || lastDone == formatDate(new Date());
+}
+
+export const generateHistoricalHeatMap = (streak: number, frequency: string[]): {
+  heatMap: Cell[], 
+  lastDone: string,
+  createdOnDate: string // Should be dd/mm/yyyy format
+} => {
+  if (streak <= 0) return {heatMap: [], lastDone: "", createdOnDate: ""};
+  
+  const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+  const result: Cell[] = [];
+  const today = new Date();
+  
+  // Start with yesterday instead of today
+  let currentDate = new Date(today);
+  currentDate.setDate(currentDate.getDate() - 1);
+  
+  let daysFound = 0;
+  let matchingDays: Cell[] = [];
+  
+  // Look backward to find matching frequency days
+  while (daysFound < streak) {
+    const dayIndex = currentDate.getDay();
+    const dayCode = days[dayIndex];
+    
+    if (frequency.includes(dayCode)) {
+      matchingDays.push({
+        day: dayCode,
+        date: formatDate(currentDate)
+      });
+      daysFound++;
+    }
+    
+    // Move to previous day
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  currentDate.setDate(currentDate.getDate() + 1);
+  const createdOnDate = currentDate.toISOString();
+  
+  // Reverse to get chronological order (past to future)
+  result.push(...matchingDays.reverse());
+  
+  return {
+    heatMap: result,
+    lastDone: result.length > 0 ? result[result.length - 1].date : "",
+    createdOnDate: createdOnDate
+  };
 }

@@ -18,6 +18,8 @@ import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { reloadHabitReminders, scheduleHabitReminder } from '@/lib/notifications';
 import { Cell, Habit } from "@/lib/types";
 import Toast from 'react-native-toast-message'; // Make sure this import is present
+import { generateHistoricalHeatMap } from "@/lib/utils";
+import { AdvancedOptions } from "@/components/AdvancedOptions";
 
 const CreateHabitScreen = () => {
   const { habit } = useLocalSearchParams();
@@ -30,6 +32,8 @@ const CreateHabitScreen = () => {
   const [reminder, setReminder] = useState(habitData?.reminder || false);
   const [reminderTime, setReminderTime] = useState<Date | undefined>(habitData?.reminderTime ? new Date(habitData.reminderTime) : undefined);
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [initialStreak, setInitialStreak] = useState(0);
 
   const days = ["S", "M", "T", "W", "Th", "F", "Sa"];
 
@@ -91,6 +95,18 @@ const CreateHabitScreen = () => {
       return false;
     }
 
+    // Check if initial streak is a non-negative whole number
+    if (initialStreak < 0 || !Number.isInteger(Number(initialStreak))) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid streak value',
+        text2: 'Please enter a non-negative whole number',
+        position: 'bottom',
+        visibilityTime: 3000,
+      });
+      return false;
+    }
+
     return true;
   };
 
@@ -100,8 +116,12 @@ const CreateHabitScreen = () => {
       return;
     }
 
-    let heatMap: Array<Cell> = [];
     const iconToUse = !icon || icon === "" ? "🔥" : icon;
+
+    // Generate historical data if initialStreak > 0
+    const historicalData = initialStreak > 0 
+      ? generateHistoricalHeatMap(initialStreak, frequency)
+      : {heatMap: [], lastDone: "", createdOnDate: new Date().toISOString()};
 
     const newHabit: Habit = {
       id: Date.now().toString(),
@@ -110,12 +130,12 @@ const CreateHabitScreen = () => {
       frequency,
       reminder: isWeb ? false : reminder,
       reminderTime,
-      currentStreak: 0,
-      bestStreak: 0,
-      prevBestStreak: 0,
-      lastDone: "",
-      createdOn: new Date().toISOString(),
-      heatMap
+      currentStreak: initialStreak,
+      bestStreak: initialStreak,
+      prevBestStreak: Math.max(0, initialStreak - 1),
+      lastDone: historicalData.lastDone,
+      createdOn: historicalData.createdOnDate,
+      heatMap: historicalData.heatMap
     };
 
     // Update the state for UI consistency (not needed for the habit object)
@@ -308,6 +328,21 @@ const CreateHabitScreen = () => {
                 setReminderTime(selectedTime);
               }
             }}
+          />
+        )}
+        
+        {/* Advanced Options - Only show in create mode */}
+        {!habitData && (
+          <AdvancedOptions
+            showAdvancedOptions={showAdvancedOptions}
+            setShowAdvancedOptions={setShowAdvancedOptions}
+            initialStreak={initialStreak}
+            setInitialStreak={setInitialStreak}
+            backgroundColor={backgroundColor}
+            textColor={textColor}
+            inputBackgroundColor={inputBackgroundColor}
+            buttonColor={buttonColor}
+            dayColor={dayColor}
           />
         )}
       </ScrollView>
