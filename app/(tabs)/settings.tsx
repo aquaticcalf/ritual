@@ -140,6 +140,12 @@ export default function Settings() {
             value={notificationsEnabled} 
             onValueChange={handleToggleNotifications}
             disabled={isWeb} 
+            trackColor={{ 
+              false: iconColor + '40', // Add transparency to the off state
+              true: buttonColor 
+            }}
+            thumbColor={habitItemBackgroundColor}
+            ios_backgroundColor={iconColor + '40'}
           />
         </ThemedView>
         {isWeb && (

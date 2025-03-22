@@ -322,6 +322,12 @@ const CreateHabitScreen = () => {
             value={isWeb ? false : reminder} 
             onValueChange={setReminder}
             disabled={isWeb}
+            trackColor={{ 
+              false: dayColor + '40', // Add transparency to the off state
+              true: buttonColor 
+            }}
+            thumbColor={inputBackgroundColor}
+            ios_backgroundColor={dayColor + '40'}
           />
         </ThemedView>
 

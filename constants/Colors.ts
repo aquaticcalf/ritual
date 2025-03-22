@@ -1,27 +1,28 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
+ * Fire-themed color palette that embodies energy, motivation, and progress.
+ * These colors are designed to evoke the feeling of building "streaks" of habits.
  */
 
-const tintColorLight = '#8A4FFF';  // Vibrant purple for light mode
-const tintColorDark = '#B088FF';   // Brighter neon purple for dark mode
+const tintColorLight = '#FF5722';  // Vibrant flame orange for light mode
+const tintColorDark = '#FFB74D';   // Glowing ember orange for dark mode
 
 export const Colors = {
   light: {
-    text: '#2D2D2D',         // Dark charcoal
-    background: '#F6F4FF',   // Very light lavender background
+    text: '#2D1506',         // Deep charred wood brown
+    background: '#FFF8E1',   // Warm parchment (slightly off-white)
     tint: tintColorLight,    
-    icon: '#5B3E96',         // Deep plum for icons
-    tabIconDefault: '#9E8BC4',
+    icon: '#D84315',         // Deep ember red
+    tabIconDefault: '#BFA189',
     tabIconSelected: tintColorLight,
-    card: '#FFFFFF',         // White cards with light lavender shadow
+    card: '#FFFFFF',         // White with warm undertones
   },
   dark: {
-    text: '#F0F0F0',         // Soft white text
-    background: '#18141F',   // Deep charcoal with purple undertones
+    text: '#FFF3E0',         // Soft flame glow
+    background: '#1A0F0F',   // Deep charcoal with red undertones
     tint: tintColorDark,     
-    icon: '#C4B5FF',         // Light lavender icons
-    tabIconDefault: '#7F6BA8',
+    icon: '#FFCC80',         // Bright flame yellow
+    tabIconDefault: '#AD6C43',
     tabIconSelected: tintColorDark,
-    card: '#241F2F',         // Slightly lighter dark purple
+    card: '#2C1A1A',         // Smoldering coal
   },
 };
