@@ -158,7 +158,6 @@ export default function Settings() {
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
-      <Toast />
     </ThemedView>
   );
 }

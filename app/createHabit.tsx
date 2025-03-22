@@ -363,9 +363,6 @@ const CreateHabitScreen = () => {
         onClose={() => setIsEmojiPickerVisible(false)}
         onSelect={(emoji) => setIcon(emoji)}
       />
-      
-      {/* Add the Toast component here */}
-      <Toast />
     </ThemedView>
   );
 };

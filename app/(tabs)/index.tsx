@@ -273,7 +273,6 @@ const HomeScreen = () => {
       <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>
         <FontAwesome name="plus" size={24} color={backgroundColor} />
       </TouchableOpacity>
-      <Toast />
     </ThemedView>
   );
 };
