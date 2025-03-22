@@ -95,12 +95,18 @@ const CreateHabitScreen = () => {
       return false;
     }
 
-    // Check if initial streak is a non-negative whole number
-    if (initialStreak < 0 || !Number.isInteger(Number(initialStreak))) {
+    // Check if initial streak is valid (non-negative integer within allowed range)
+    if (initialStreak < 0 || !Number.isInteger(Number(initialStreak)) || initialStreak > 10) {
+      let errorMessage = 'Please enter a non-negative whole number';
+      
+      if (initialStreak > 10) {
+        errorMessage = 'Maximum allowed initial streak is 10';
+      }
+      
       Toast.show({
         type: 'error',
         text1: 'Invalid streak value',
-        text2: 'Please enter a non-negative whole number',
+        text2: errorMessage,
         position: 'bottom',
         visibilityTime: 3000,
       });

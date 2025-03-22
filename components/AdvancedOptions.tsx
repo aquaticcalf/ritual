@@ -27,6 +27,8 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
   buttonColor,
   dayColor,
 }) => {
+  const MAX_STREAK = 10;
+  
   return (
     <ThemedView style={styles.advancedOptionsContainer}>
       <TouchableOpacity 
@@ -45,13 +47,18 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
         <ThemedView style={styles.advancedOptionsContent}>
           <ThemedText style={[styles.label, { color: textColor, marginTop: 15 }]}>Initial Streak</ThemedText>
           <ThemedText style={[styles.subLabel, { color: dayColor }]}>
-            Set a starting streak if you're already tracking this habit elsewhere
+            Set a starting streak if you're already tracking this habit elsewhere (max {MAX_STREAK})
           </ThemedText>
           
           <ThemedView style={styles.streakInputContainer}>
             <TouchableOpacity
-              style={[styles.streakButton, { backgroundColor: buttonColor }]}
-              onPress={() => setInitialStreak(Math.max(0, initialStreak - 1))}
+              style={[
+                styles.streakButton, 
+                { backgroundColor: buttonColor },
+                initialStreak <= 0 ? { opacity: 0.5 } : {}
+              ]}
+              onPress={() => initialStreak > 0 && setInitialStreak(initialStreak - 1)}
+              disabled={initialStreak <= 0}
             >
               <ThemedText style={{ color: backgroundColor, fontSize: 16 }}>-</ThemedText>
             </TouchableOpacity>
@@ -64,7 +71,9 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
               value={initialStreak.toString()}
               onChangeText={(text) => {
                 const numericValue = text.replace(/[^0-9]/g, '');
-                setInitialStreak(parseInt(numericValue) || 0);
+                const parsedValue = parseInt(numericValue) || 0;
+                // Cap the value between 0 and MAX_STREAK (10)
+                setInitialStreak(Math.min(Math.max(0, parsedValue), MAX_STREAK));
               }}
               keyboardType="numeric"
               placeholder="0"
@@ -72,8 +81,13 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
             />
             
             <TouchableOpacity
-              style={[styles.streakButton, { backgroundColor: buttonColor }]}
-              onPress={() => setInitialStreak(initialStreak + 1)}
+              style={[
+                styles.streakButton, 
+                { backgroundColor: buttonColor },
+                initialStreak >= MAX_STREAK ? { opacity: 0.5 } : {}
+              ]}
+              onPress={() => initialStreak < MAX_STREAK && setInitialStreak(initialStreak + 1)}
+              disabled={initialStreak >= MAX_STREAK}
             >
               <ThemedText style={{ color: backgroundColor, fontSize: 16 }}>+</ThemedText>
             </TouchableOpacity>
