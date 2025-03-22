@@ -225,13 +225,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dayBadge: {
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     margin: 4,
     borderWidth: 1,
-    minWidth: 32,
-    alignItems: 'center',
   },
   dayText: {
     fontSize: 14,
