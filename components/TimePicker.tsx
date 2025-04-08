@@ -22,7 +22,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ isEditing, time, onTimeChange }
   const cardColor = Colors.dark.card;
   const tabIconDefault = Colors.dark.tabIconDefault;
   const iconColor = Colors.dark.icon;
-  const isDarkMode = true; // Force dark mode regardless of system setting
   
   // Use MD3 dark theme as base
   const baseTheme = MD3DarkTheme;
