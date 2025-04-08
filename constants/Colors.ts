@@ -1,28 +1,32 @@
 /**
- * Fire-themed color palette that embodies energy, motivation, and progress.
- * These colors are designed to evoke the feeling of building "streaks" of habits.
+ * Updated light mode with softer, brighter colors to match a light theme.
+ * Maintains visual harmony with the time picker component's color scheme.
  */
 
-const tintColorLight = '#FF5722';  // Vibrant flame orange for light mode
-const tintColorDark = '#FFB74D';   // Glowing ember orange for dark mode
+const tintColorLight = '#FFB300';  // Yellow highlight
+const tintColorDark = '#FFB300';   // Same highlight for dark theme
 
 export const Colors = {
   light: {
-    text: '#2D1506',         // Deep charred wood brown
-    background: '#FFF8E1',   // Warm parchment (slightly off-white)
-    tint: tintColorLight,    
-    icon: '#D84315',         // Deep ember red
-    tabIconDefault: '#BFA189',
+    text: '#333333',           // Dark gray for readability on light background
+    background: '#F5F5F5',     // Light gray background
+    tint: tintColorLight,      
+    icon: '#FFA000',           // Slightly softer yellow for icons
+    tabIconDefault: '#A0A0A0', // Muted gray for unselected tabs
     tabIconSelected: tintColorLight,
-    card: '#FFFFFF',         // White with warm undertones
+    card: '#FFFFFF',           // White cards for clarity
+    modalBackdrop: 'rgba(255, 255, 255, 0.7)', // Translucent white backdrop
+    errorColor: '#B00020',     // Standard error color
   },
   dark: {
-    text: '#FFF3E0',         // Soft flame glow
-    background: '#1A0F0F',   // Deep charcoal with red undertones
-    tint: tintColorDark,     
-    icon: '#FFCC80',         // Bright flame yellow
-    tabIconDefault: '#AD6C43',
+    text: '#FFB300',           // Highlighted text
+    background: '#1E1E1E',     // Dark background
+    tint: tintColorDark,       
+    icon: '#FFB300',           // Highlight icon
+    tabIconDefault: '#B0B0B0', // Unselected tab
     tabIconSelected: tintColorDark,
-    card: '#2C1A1A',         // Smoldering coal
+    card: '#2E2E2E',           // Input field background
+    modalBackdrop: 'rgba(0, 0, 0, 0.7)', // Translucent black backdrop
+    errorColor: '#CF6679',     // Dark mode error color
   },
 };
