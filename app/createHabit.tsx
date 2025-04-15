@@ -42,7 +42,7 @@ const CreateHabitScreen = () => {
   const inputBackgroundColor = useThemeColor({}, "card");
   const buttonColor = useThemeColor({}, "tint");
   const selectedDayColor = useThemeColor({}, "tint");
-  const dayColor = useThemeColor({}, "icon");
+  const secondaryTextColor = useThemeColor({}, "tabIconDefault");
 
   const router = useRouter();
   const navigation = useNavigation();
@@ -276,7 +276,7 @@ const CreateHabitScreen = () => {
               { color: textColor, backgroundColor: inputBackgroundColor },
             ]}
             placeholder="Workout"
-            placeholderTextColor={dayColor}
+            placeholderTextColor={secondaryTextColor}
             value={name}
             onChangeText={setName}
           />
@@ -292,7 +292,7 @@ const CreateHabitScreen = () => {
           </TouchableOpacity>
         </ThemedView>
         <ThemedText style={[styles.label, { color: textColor }]}>Frequency</ThemedText>
-        <ThemedText style={[styles.subLabel, { color: dayColor }]}>Choose at least 1 day</ThemedText>
+        <ThemedText style={[styles.subLabel, { color: secondaryTextColor }]}>Choose at least 1 day</ThemedText>
         <ThemedView style={styles.dayContainer}>
           {days.map((day, index) => (
             <TouchableOpacity
@@ -306,7 +306,7 @@ const CreateHabitScreen = () => {
                 );
               }}
             >
-              <ThemedText style={[styles.dayText, { color: frequency.includes(day) ? backgroundColor : textColor }]}>{day}</ThemedText>
+              <ThemedText style={[styles.dayText, { color: frequency.includes(day) ? backgroundColor : secondaryTextColor }]}>{day}</ThemedText>
             </TouchableOpacity>
           ))}
         </ThemedView>
@@ -315,7 +315,7 @@ const CreateHabitScreen = () => {
           <ThemedView style={styles.reminderLabelContainer}>
             <ThemedText style={[styles.label, { color: textColor }]}>Reminder</ThemedText>
             {isWeb && (
-              <ThemedText style={styles.disclaimer}>*Not available on web</ThemedText>
+              <ThemedText style={[styles.disclaimer, { color: secondaryTextColor }]}>*Not available on web</ThemedText>
             )}
           </ThemedView>
           <Switch 
@@ -323,11 +323,11 @@ const CreateHabitScreen = () => {
             onValueChange={setReminder}
             disabled={isWeb}
             trackColor={{ 
-              false: dayColor + '40', // Add transparency to the off state
+              false: secondaryTextColor + '40',
               true: buttonColor 
             }}
             thumbColor={inputBackgroundColor}
-            ios_backgroundColor={dayColor + '40'}
+            ios_backgroundColor={secondaryTextColor + '40'}
           />
         </ThemedView>
 
@@ -354,7 +354,7 @@ const CreateHabitScreen = () => {
             textColor={textColor}
             inputBackgroundColor={inputBackgroundColor}
             buttonColor={buttonColor}
-            dayColor={dayColor}
+            dayColor={secondaryTextColor}
           />
         )}
       </ScrollView>

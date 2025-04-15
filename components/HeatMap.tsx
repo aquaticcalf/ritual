@@ -4,6 +4,7 @@ import MonthComponent from "./Month";
 import { StyleSheet, View, ScrollView } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { Cell } from "@/lib/types";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface HeatMapProps {
   year?: number;
@@ -61,6 +62,7 @@ const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number):
 };
 
 export function HeatMap({ year = new Date().getFullYear(), heatMap = [], createdOn }: HeatMapProps) {
+  const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   // Create a ref for the ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
@@ -118,7 +120,7 @@ export function HeatMap({ year = new Date().getFullYear(), heatMap = [], created
           
           return (
             <View style={styles.monthWrapper} key={index}>
-              <ThemedText style={styles.monthName}>{monthName}</ThemedText>
+              <ThemedText style={[styles.monthName, { color: secondaryTextColor }]}>{monthName}</ThemedText>
               <View style={styles.monthContainer}>
                 <MonthComponent 
                   month={index} 

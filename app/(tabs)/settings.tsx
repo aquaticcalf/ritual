@@ -16,6 +16,7 @@ export default function Settings() {
   const iconColor = useThemeColor({}, 'icon');
   const buttonColor = useThemeColor({}, 'tint');
   const habitItemBackgroundColor = useThemeColor({}, 'card');
+  const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
 
   const [theme, setTheme] = useState<ThemePreference>('system');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -115,21 +116,21 @@ export default function Settings() {
               onPress={() => handleThemeChange('system')}
               style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
             >
-              <ThemedText style={{ color: textColor }}>System</ThemedText>
+              <ThemedText style={{ color: secondaryTextColor }}>System</ThemedText>
               <RadioButton value="system" color={iconColor} />
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => handleThemeChange('light')}
               style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
             >
-              <ThemedText style={{ color: textColor }}>Light</ThemedText>
+              <ThemedText style={{ color: secondaryTextColor }}>Light</ThemedText>
               <RadioButton value="light" color={iconColor} />
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => handleThemeChange('dark')}
               style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
             >
-              <ThemedText style={{ color: textColor }}>Dark</ThemedText>
+              <ThemedText style={{ color: secondaryTextColor }}>Dark</ThemedText>
               <RadioButton value="dark" color={iconColor} />
             </TouchableOpacity>
           </RadioButton.Group>
@@ -141,15 +142,15 @@ export default function Settings() {
             onValueChange={handleToggleNotifications}
             disabled={isWeb} 
             trackColor={{ 
-              false: iconColor + '40', // Add transparency to the off state
+              false: secondaryTextColor + '40',
               true: buttonColor 
             }}
             thumbColor={habitItemBackgroundColor}
-            ios_backgroundColor={iconColor + '40'}
+            ios_backgroundColor={secondaryTextColor + '40'}
           />
         </ThemedView>
         {isWeb && (
-          <ThemedText style={styles.disclaimer}>*Notifications are not available on web platforms</ThemedText>
+          <ThemedText style={[styles.disclaimer, { color: secondaryTextColor }]}>*Notifications are not available on web platforms</ThemedText>
         )}
         <TouchableOpacity 
           style={[styles.button, { 

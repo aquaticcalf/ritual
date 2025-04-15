@@ -16,6 +16,7 @@ const HabitPage = () => {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const cardBackgroundColor = useThemeColor({}, 'card');
+  const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const navigation = useNavigation();
   const router = useRouter();
 
@@ -79,11 +80,11 @@ const HabitPage = () => {
         <ThemedView style={styles.statsContainer}>
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Current Streak</ThemedText>
-            <ThemedText style={[styles.statValue, { color: textColor }]}>{habitData.currentStreak}🔥</ThemedText>
+            <ThemedText style={[styles.statValue, { color: secondaryTextColor }]}>{habitData.currentStreak}🔥</ThemedText>
           </ThemedView>
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Best Streak</ThemedText>
-            <ThemedText style={[styles.statValue, { color: textColor }]}>{habitData.bestStreak}🔥</ThemedText>
+            <ThemedText style={[styles.statValue, { color: secondaryTextColor }]}>{habitData.bestStreak}🔥</ThemedText>
           </ThemedView>
         </ThemedView>
 
@@ -97,7 +98,7 @@ const HabitPage = () => {
                   styles.dayBadge,
                   { 
                     backgroundColor: habitData.frequency.includes(day) ? useThemeColor({}, 'tint') : 'transparent',
-                    borderColor: useThemeColor({}, 'icon'),
+                    borderColor: secondaryTextColor,
                   }
                 ]}
               >
@@ -105,7 +106,7 @@ const HabitPage = () => {
                   style={[
                     styles.dayText, 
                     { 
-                      color: habitData.frequency.includes(day) ? backgroundColor : textColor,
+                      color: habitData.frequency.includes(day) ? backgroundColor : secondaryTextColor,
                       fontWeight: habitData.frequency.includes(day) ? 'bold' : 'normal',
                     }
                   ]}
@@ -120,7 +121,7 @@ const HabitPage = () => {
         {habitData.reminder && (
           <ThemedView style={[styles.infoBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.infoTitle, { color: textColor }]}>Reminder Time</ThemedText>
-            <ThemedText style={[styles.infoValue, { color: textColor }]}>
+            <ThemedText style={[styles.infoValue, { color: secondaryTextColor }]}>
               {habitData.reminderTime ? new Date(habitData.reminderTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
             </ThemedText>
           </ThemedView>
@@ -128,17 +129,17 @@ const HabitPage = () => {
 
         <ThemedView style={[styles.infoBox, { backgroundColor: cardBackgroundColor }]}>
           <ThemedText style={[styles.infoTitle, { color: textColor }]}>Habit Created On</ThemedText>
-          <ThemedText style={[styles.infoValue, { color: textColor }]}>{new Date(habitData.createdOn).toLocaleDateString()}</ThemedText>
+          <ThemedText style={[styles.infoValue, { color: secondaryTextColor }]}>{new Date(habitData.createdOn).toLocaleDateString()}</ThemedText>
         </ThemedView>
 
         <ThemedView style={styles.header}>
           <TouchableOpacity style={[styles.button, { backgroundColor: cardBackgroundColor }]} onPress={() => router.push({ pathname: '/createHabit', params: { habit: JSON.stringify(habitData) } })}>
             <Ionicons name="pencil" size={20} color={textColor} />
-            <ThemedText style={styles.buttonText}> Edit</ThemedText>
+            <ThemedText style={[styles.buttonText, { color: secondaryTextColor }]}> Edit</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.button, { backgroundColor: cardBackgroundColor }]} onPress={confirmDelete}>
             <Ionicons name="trash" size={20} color={textColor} />
-            <ThemedText style={styles.buttonText}> Delete</ThemedText>
+            <ThemedText style={[styles.buttonText, { color: secondaryTextColor }]}> Delete</ThemedText>
           </TouchableOpacity>
         </ThemedView>
 
