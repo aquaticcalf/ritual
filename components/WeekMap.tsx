@@ -14,37 +14,52 @@ const WeekMap: React.FC<WeekMapProps> = ({ heatMap }) => {
   const activeColor = useThemeColor({}, 'tint');
   const textColor = useThemeColor({}, 'text');
   const cardColor = useThemeColor({}, 'card');
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
 
   const completedDates = new Set(heatMap.map(cell => cell.date));
-  const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+  const dayInitials = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const today = new Date();
-  const weekDates: { dayInitial: string; date: string }[] = [];
+  const currentDayIndex = today.getDay();
+  const weekDates: { dayInitial: string; dateNumber: string; fullDate: string }[] = [];
 
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-    const dayIndex = date.getDay();
-    weekDates.push({ dayInitial: days[dayIndex], date: formatDate(date) });
+  const sundayDate = new Date(today);
+  sundayDate.setDate(today.getDate() - currentDayIndex);
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(sundayDate);
+    date.setDate(sundayDate.getDate() + i);
+    weekDates.push({
+      dayInitial: dayInitials[i],
+      dateNumber: date.getDate().toString(),
+      fullDate: formatDate(date)
+    });
   }
 
   return (
     <View style={styles.container}>
-      {weekDates.map(({ dayInitial, date }, index) => {
-        const isCompleted = completedDates.has(date);
+      {weekDates.map(({ dayInitial, dateNumber, fullDate }, index) => {
+        const isCompleted = completedDates.has(fullDate);
         return (
-          <View 
-            key={index} 
-            style={[
-              styles.dayCell,
-              { backgroundColor: isCompleted ? activeColor : cardColor, borderColor: inactiveColor }
-            ]}
-          >
-            <ThemedText style={[
-              styles.dayText,
-              { color: isCompleted ? cardColor : textColor }
-            ]}>
+          <View key={index} style={styles.dayContainer}>
+            <ThemedText style={[styles.dayInitialText, { color: subtleTextColor }]}>
               {dayInitial}
             </ThemedText>
+            <View 
+              style={[
+                styles.dayCell,
+                {
+                  backgroundColor: isCompleted ? activeColor : cardColor, 
+                  borderColor: inactiveColor 
+                }
+              ]}
+            >
+              <ThemedText style={[
+                styles.dayNumberText,
+                { color: isCompleted ? cardColor : textColor }
+              ]}>
+                {dateNumber}
+              </ThemedText>
+            </View>
           </View>
         );
       })}
@@ -55,19 +70,27 @@ const WeekMap: React.FC<WeekMapProps> = ({ heatMap }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10, // Add some space above the week map
-    paddingHorizontal: 5, // Align with habit item padding
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingHorizontal: 5,
+  },
+  dayContainer: {
+    alignItems: 'center',
+  },
+  dayInitialText: {
+    fontSize: 10,
+    marginBottom: 4,
+    fontWeight: '500',
   },
   dayCell: {
     width: 30,
     height: 30,
-    borderRadius: 5,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
   },
-  dayText: {
+  dayNumberText: {
     fontSize: 12,
     fontWeight: 'bold',
   },

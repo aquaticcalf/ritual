@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   habitItem: {
     alignItems: "stretch",
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: 10,
   },
   streak: {
     fontSize: 18,
