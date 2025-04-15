@@ -17,6 +17,7 @@ const HomeScreen = () => {
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
+  const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const iconColor = useThemeColor({}, 'icon');
   const buttonColor = useThemeColor({}, 'tint');
   const habitItemBackgroundColor = useThemeColor({}, 'card');
@@ -250,16 +251,20 @@ const HomeScreen = () => {
                   onLongPress={() => handleMarkAsDone({ id: item.id })}
                   delayLongPress={500} // Standard long press delay
                 >
-                  <ThemedText style={[
-                    styles.icon, 
-                    { color: iconColor }
-                  ]}>{item.icon}</ThemedText>
-                  <ThemedText style={[
-                    styles.habitText, 
-                    { color: textColor },
-                    // Apply text strikethrough if completed today
-                    isCompletedToday ? styles.completedText : {}
-                  ]}>{item.name}</ThemedText>
+                  <ThemedView style={{ flexDirection: "row", alignItems: "center", backgroundColor: habitItemBackgroundColor, gap: 10 }}>
+                    <ThemedText style={[
+                      { color: iconColor }
+                    ]}>{item.icon}</ThemedText>
+                    <ThemedText style={[
+                      { color: textColor, fontSize: 18 },
+                      // Apply text strikethrough if completed today
+                      isCompletedToday ? styles.completedText : {}
+                    ]}>{item.name}</ThemedText>
+                    {/* if frequency size is 7, then show every day else show the length of frequency days a week example: 3 days a week */}
+                    <ThemedText style={[
+                      { color: secondaryTextColor, fontSize: 12 }
+                    ]}>{item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}</ThemedText>
+                  </ThemedView>
                   <ThemedText style={[
                     styles.streak, 
                     { color: textColor }
@@ -291,6 +296,7 @@ const styles = StyleSheet.create({
   habitItem: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -298,13 +304,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
-  },
-  icon: {
-    marginRight: 15,
-  },
-  habitText: {
-    flex: 1,
-    fontSize: 18,
   },
   streak: {
     fontSize: 18,
