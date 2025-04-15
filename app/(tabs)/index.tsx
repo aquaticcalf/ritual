@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert } from "react-native";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -11,6 +11,7 @@ import { requestNotificationPermissions } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import WeekMap from '@/components/WeekMap';
 
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -251,24 +252,29 @@ const HomeScreen = () => {
                   onLongPress={() => handleMarkAsDone({ id: item.id })}
                   delayLongPress={500} // Standard long press delay
                 >
-                  <ThemedView style={{ flexDirection: "row", alignItems: "center", backgroundColor: habitItemBackgroundColor, gap: 10 }}>
-                    <ThemedText style={[
-                      { color: iconColor }
-                    ]}>{item.icon}</ThemedText>
-                    <ThemedText style={[
-                      { color: textColor, fontSize: 18 },
-                      // Apply text strikethrough if completed today
-                      isCompletedToday ? styles.completedText : {}
-                    ]}>{item.name}</ThemedText>
-                    {/* if frequency size is 7, then show every day else show the length of frequency days a week example: 3 days a week */}
-                    <ThemedText style={[
-                      { color: secondaryTextColor, fontSize: 12 }
-                    ]}>{item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}</ThemedText>
-                  </ThemedView>
-                  <ThemedText style={[
-                    styles.streak, 
-                    { color: textColor }
-                  ]}>{item.currentStreak} 🔥</ThemedText>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.habitDetailsContainer}>
+                      <ThemedView style={{ flexDirection: "row", alignItems: "center", backgroundColor: habitItemBackgroundColor, gap: 10 }}>
+                        <ThemedText style={[
+                          { color: iconColor }
+                        ]}>{item.icon}</ThemedText>
+                        <ThemedText style={[
+                          { color: textColor, fontSize: 18 },
+                          // Apply text strikethrough if completed today
+                          isCompletedToday ? styles.completedText : {}
+                        ]}>{item.name}</ThemedText>
+                        {/* if frequency size is 7, then show every day else show the length of frequency days a week example: 3 days a week */}
+                        <ThemedText style={[
+                          { color: secondaryTextColor, fontSize: 12 }
+                        ]}>{item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}</ThemedText>
+                      </ThemedView>
+                      <ThemedText style={[
+                        styles.streak, 
+                        { color: textColor }
+                      ]}>{item.currentStreak} 🔥</ThemedText>
+                    </View>
+                    <WeekMap heatMap={item.heatMap} />
+                  </View>
                 </Pressable>
               </Animated.View>
             );
@@ -294,9 +300,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   habitItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: "stretch",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -304,6 +308,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
+  },
+  habitDetailsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 5,
   },
   streak: {
     fontSize: 18,
