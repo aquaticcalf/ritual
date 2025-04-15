@@ -1,14 +1,24 @@
-import { StyleSheet, Alert, TouchableOpacity, Switch, Platform } from 'react-native';
+import { StyleSheet, Alert, TouchableOpacity, Switch, Platform, Modal, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { RadioButton } from 'react-native-paper';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { reloadHabitReminders, turnOffAllHabitReminders, turnOnAllHabitReminders } from '@/lib/notifications';
 import { ThemePreference, getThemePreference, saveThemePreference } from '@/lib/themeManager';
 import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
+
+// Helper function to get display name for theme
+const getThemeDisplayName = (themeValue: ThemePreference): string => {
+  switch (themeValue) {
+    case 'light': return 'Light';
+    case 'dark': return 'Dark';
+    case 'system': return 'System';
+    default: return 'System';
+  }
+};
 
 export default function Settings() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -20,6 +30,7 @@ export default function Settings() {
 
   const [theme, setTheme] = useState<ThemePreference>('system');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [themeModalVisible, setThemeModalVisible] = useState(false); // State for theme modal
   const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
@@ -57,11 +68,12 @@ export default function Settings() {
   const handleThemeChange = async (newTheme: string) => {
     await saveThemePreference(newTheme as ThemePreference);
     setTheme(newTheme as ThemePreference);
+    setThemeModalVisible(false); // Close modal after selection
     
     Toast.show({
       type: 'success',
       text1: 'Theme updated',
-      text2: `App theme set to ${newTheme}`,
+      text2: `App theme set to ${getThemeDisplayName(newTheme as ThemePreference)}`,
       position: 'bottom',
       visibilityTime: 2000,
     });
@@ -110,33 +122,18 @@ export default function Settings() {
       <ThemedText style={[styles.header, { color: textColor }]}>Settings</ThemedText>
       <ThemedView style={styles.settingsContainer}>
         <ThemedText style={[styles.settingLabel, { color: textColor }]}>Theme</ThemedText>
-        <ThemedView style={[styles.themeContainer, { backgroundColor: habitItemBackgroundColor }]}>
-          <RadioButton.Group onValueChange={handleThemeChange} value={theme}>
-            <TouchableOpacity 
-              onPress={() => handleThemeChange('system')}
-              style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
-            >
-              <ThemedText style={{ color: secondaryTextColor }}>System</ThemedText>
-              <RadioButton value="system" color={iconColor} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => handleThemeChange('light')}
-              style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
-            >
-              <ThemedText style={{ color: secondaryTextColor }}>Light</ThemedText>
-              <RadioButton value="light" color={iconColor} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => handleThemeChange('dark')}
-              style={[styles.themeItem, { backgroundColor: habitItemBackgroundColor }]}
-            >
-              <ThemedText style={{ color: secondaryTextColor }}>Dark</ThemedText>
-              <RadioButton value="dark" color={iconColor} />
-            </TouchableOpacity>
-          </RadioButton.Group>
-        </ThemedView>
-        <ThemedView style={styles.notificationContainer}>
-          <ThemedText style={[styles.settingLabel, { color: textColor }]}>Notifications</ThemedText>
+        <TouchableOpacity 
+          style={[styles.settingItem, { backgroundColor: habitItemBackgroundColor }]}
+          onPress={() => setThemeModalVisible(true)}
+        >
+          <ThemedText style={[styles.settingItemText, { color: textColor }]}>Select Theme</ThemedText>
+          <View style={styles.valueContainer}>
+            <ThemedText style={[styles.settingItemValue, { color: secondaryTextColor }]}>{getThemeDisplayName(theme)}</ThemedText>
+            <Ionicons name="chevron-forward" size={20} color={secondaryTextColor} style={styles.arrowIcon} />
+          </View>
+        </TouchableOpacity>
+        <ThemedView style={[styles.notificationContainer, styles.settingItem, { backgroundColor: habitItemBackgroundColor, paddingVertical: 10 }]}>
+          <ThemedText style={[styles.settingLabel, { color: textColor, marginTop: 0 }]}>Notifications</ThemedText>
           <Switch 
             value={notificationsEnabled} 
             onValueChange={handleToggleNotifications}
@@ -145,7 +142,7 @@ export default function Settings() {
               false: secondaryTextColor + '40',
               true: buttonColor 
             }}
-            thumbColor={habitItemBackgroundColor}
+            thumbColor={notificationsEnabled ? buttonColor : habitItemBackgroundColor}
             ios_backgroundColor={secondaryTextColor + '40'}
           />
         </ThemedView>
@@ -165,6 +162,38 @@ export default function Settings() {
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={themeModalVisible}
+        onRequestClose={() => setThemeModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <ThemedView style={[styles.modalContent, { backgroundColor: habitItemBackgroundColor }]}>
+            <ThemedText style={[styles.modalTitle, { color: textColor }]}>Select Theme</ThemedText>
+            {['system', 'light', 'dark'].map((themeOption, index, arr) => (
+              <TouchableOpacity 
+                key={themeOption}
+                style={[
+                  styles.modalOption, 
+                  index < arr.length - 1 ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: secondaryTextColor } : {}
+                ]}
+                onPress={() => handleThemeChange(themeOption)}
+              >
+                <ThemedText style={{ color: textColor, flex: 1 }}>{getThemeDisplayName(themeOption as ThemePreference)}</ThemedText>
+                {theme === themeOption && <ThemedText style={{ color: buttonColor }}>✓</ThemedText>} 
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity 
+              style={[styles.modalCloseButton, { backgroundColor: secondaryTextColor + '20' }]}
+              onPress={() => setThemeModalVisible(false)}
+            >
+              <ThemedText style={[styles.modalCloseButtonText, { color: textColor }]}>Close</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -183,45 +212,84 @@ const styles = StyleSheet.create({
   settingsContainer: {
     display: 'flex',
     flexDirection: 'column',
+    gap: 15,
   },
   settingLabel: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 10,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 5,
   },
-  themeContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 5,
-  },
-  themeItem: {
-    display: 'flex',
+  settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    borderRadius: 10,
   },
   disclaimer: {
     fontSize: 12,
-    marginTop: 5,
-    opacity: 0.5,
+    opacity: 0.6,
+    paddingHorizontal: 5,
   },
   notificationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
   },
   button: {
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 30,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+  },
+  modalCloseButton: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  settingItemText: {
+    flex: 1,
+  },
+  settingItemValue: {
+    marginRight: 5,
+  },
+  valueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  arrowIcon: {
+    fontSize: 18,
+    marginLeft: 3,
   },
 });
