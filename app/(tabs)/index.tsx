@@ -245,8 +245,8 @@ const HomeScreen = () => {
                     { backgroundColor: habitItemBackgroundColor },
                     // Apply completed habit style if done today
                     isCompletedToday ? styles.completedHabit : {},
-                    // Only apply opacity when it's a regular press, not during long press
-                    pressed ? { opacity: 0.7 } : {}
+                    // Apply reduced opacity if completed, otherwise apply press opacity
+                    isCompletedToday ? { opacity: 0.6 } : (pressed ? { opacity: 0.7 } : {})
                   ]}
                   onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
                   onLongPress={() => handleMarkAsDone({ id: item.id })}
@@ -254,7 +254,7 @@ const HomeScreen = () => {
                 >
                   <View style={{ flex: 1 }}>
                     <View style={styles.habitDetailsContainer}>
-                      <ThemedView style={{ flexDirection: "row", alignItems: "center", backgroundColor: habitItemBackgroundColor, gap: 10 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                         <ThemedText style={[
                           { color: iconColor }
                         ]}>{item.icon}</ThemedText>
@@ -267,7 +267,7 @@ const HomeScreen = () => {
                         <ThemedText style={[
                           { color: secondaryTextColor, fontSize: 12 }
                         ]}>{item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}</ThemedText>
-                      </ThemedView>
+                      </View>
                       <ThemedText style={[
                         styles.streak, 
                         { color: textColor }
