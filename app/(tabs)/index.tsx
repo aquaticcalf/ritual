@@ -6,15 +6,21 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { formatDate, checkAndUpdateStreak } from "@/lib/utils";
+import { formatDate, checkAndUpdateStreak, isStreakAlive } from "@/lib/utils";
 import { requestNotificationPermissions } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import WeekMap from '@/components/WeekMap';
+// import { allTestHabits } from '../../test'; // Adjust the path
+
+// Extend Habit type locally for the isFrozenToday flag
+interface HabitWithFreezeStatus extends Habit {
+  isFrozenToday?: boolean;
+}
 
 const HomeScreen = () => {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habits, setHabits] = useState<HabitWithFreezeStatus[]>([]);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -22,7 +28,70 @@ const HomeScreen = () => {
   const iconColor = useThemeColor({}, 'icon');
   const buttonColor = useThemeColor({}, 'tint');
   const habitItemBackgroundColor = useThemeColor({}, 'card');
+  const frozenHabitBackgroundColor = useThemeColor({}, 'frozenBackground'); // Use theme color
+  const frozenHabitBorderColor = useThemeColor({}, 'frozenBorder');     // Use theme color
   const scaleAnimations = useRef<{[key: string]: Animated.Value}>({});
+
+  // Define styles inside the component to access theme colors
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 20,
+      marginTop: 20,
+    },
+    habitItem: {
+      alignItems: "stretch",
+      padding: 15,
+      borderRadius: 15,
+      marginBottom: 10,
+      shadowColor: "#000",
+      shadowOpacity: 0.1,
+      shadowRadius: 5,
+      elevation: 2,
+    },
+    habitDetailsContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 10,
+    },
+    streak: {
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    addButton: {
+      position: "absolute",
+      bottom: 30,
+      right: 30,
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+      elevation: 4,
+    },
+    completedText: {
+      textDecorationLine: 'line-through',
+      opacity: 0.6,
+    },
+    completedHabit: {
+      borderLeftWidth: 4,
+      borderLeftColor: '#4CAF50', // Green success color
+    },
+    frozenHabit: {
+      backgroundColor: frozenHabitBackgroundColor, 
+      borderLeftWidth: 4,
+      borderLeftColor: frozenHabitBorderColor,
+    },
+  });
 
   interface HandleMarkAsDoneParams {
     id: string;
@@ -75,6 +144,9 @@ const HomeScreen = () => {
             
             // Update lastDone to the date of the new last entry, or empty if none
             updatedHabit.lastDone = updatedHabit.heatMap.length > 0 ? updatedHabit.heatMap[updatedHabit.heatMap.length - 1].date : "";
+            
+            // Reset frozen status if unmarked
+            updatedHabit.isFrozenToday = false;
             
             return updatedHabit;
           }
@@ -176,6 +248,10 @@ const HomeScreen = () => {
             updatedHabit.heatMap.push({ day: todayDayCode, date: formatedToday });
           }
           
+          // Reset frozen status if marked as done
+          updatedHabit.isFrozenToday = false;
+          updatedHabit.freezeUsedOn = undefined; // Clear freeze used flag when completed
+          
           return updatedHabit;
         }
         return h;
@@ -201,6 +277,33 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
+    // const initializeStorageForTesting = async () => {
+    //   try {
+    //     // --- !! TEMPORARY TESTING CODE !! ---
+    //     const shouldInjectTestData = true; // Set to true to inject, false to run normally
+    //     const forceOverwrite = true; // Set to true to overwrite existing data
+
+    //     const existingData = await AsyncStorage.getItem("habits");
+
+    //     if (shouldInjectTestData && (forceOverwrite || !existingData)) {
+    //       console.warn("--- Injecting Test Habits into AsyncStorage ---");
+    //       await AsyncStorage.setItem("habits", JSON.stringify(allTestHabits));
+    //       console.warn("--- Test Habits Injected ---");
+    //       // Optional: Reload the app or force a re-render if necessary
+    //       // depending on where exactly you place this.
+    //     }
+    //     // --- !! END TEMPORARY CODE !! ---
+
+    //     // Proceed with the normal fetchAndCheckHabits logic
+    //     // Make sure this runs *after* potential injection
+    //     await fetchAndCheckHabits();
+
+    //   } catch (error) {
+    //     console.error("Error during storage initialization or fetch:", error);
+    //   }
+    // };
+
+    // Renamed the original function slightly if needed
     const fetchAndCheckHabits = async () => {
       try {
         const existingHabitsJson = await AsyncStorage.getItem("habits");
@@ -212,50 +315,79 @@ const HomeScreen = () => {
 
         // Check and update streak/freezes for each habit
         const processedHabits = habitsData.map(habit => {
+          const habitWithStatus: HabitWithFreezeStatus = { ...habit }; // Start with existing habit data
+
           // Initialize freezesAvailable if it's missing (for backward compatibility)
-          if (habit.freezesAvailable === undefined) {
-            habit.freezesAvailable = 0;
+          if (habitWithStatus.freezesAvailable === undefined) {
+            habitWithStatus.freezesAvailable = 0;
           }
           
-          const result = checkAndUpdateStreak(habit, today);
-          if (JSON.stringify(result.updatedHabit) !== JSON.stringify(habit)) {
-            habitsUpdated = true; // Mark if any habit was changed
-            // Add toast messages based on freeze consumption/streak reset
-            const originalHabit = habit; // Keep original for comparison
-            const updatedHabit = result.updatedHabit;
+          const result = checkAndUpdateStreak(habitWithStatus, today);
+          console.log(`Habit: ${habit.name} - Before check:`, habitWithStatus);
+          console.log(`Habit: ${habit.name} - Check result:`, result);
+
+          // Determine persistent frozen status for UI
+          const updatedHabitForStatus = result.updatedHabit;
+          const formattedToday = formatDate(today);
+          const wasCheckedToday = updatedHabitForStatus.lastCheckedDate === formattedToday;
+          const isNowAlive = isStreakAlive(updatedHabitForStatus.frequency, updatedHabitForStatus.lastDone);
+          const isCompletedToday = updatedHabitForStatus.lastDone === formattedToday;
+          // const finalIsFrozenToday = wasCheckedToday && isNowAlive && !isCompletedToday;
+
+          // Use the persisted freezeUsedOn date to determine visual state
+          const finalIsFrozenToday = updatedHabitForStatus.freezeUsedOn === formattedToday && !isCompletedToday;
+
+          const finalHabitState = {
+            ...updatedHabitForStatus,
+            isFrozenToday: finalIsFrozenToday
+          };
+
+          if (JSON.stringify(finalHabitState) !== JSON.stringify(habitWithStatus)) { // Compare with the state before checkAndUpdateStreak
+            habitsUpdated = true; // Mark if any habit was changed by checkAndUpdateStreak or by adding the flag
+
+            // Add toast messages based on freeze consumption/streak reset (using result.updatedHabit for comparison)
+            const originalHabitForToast = habit; // Keep original for comparison before checkAndUpdateStreak
+            const updatedHabitForToast = result.updatedHabit;
 
             if (result.streakPreservedByFreeze) {
-                const freezesUsed = (originalHabit.freezesAvailable || 0) - updatedHabit.freezesAvailable;
+                const freezesUsed = (originalHabitForToast.freezesAvailable || 0) - updatedHabitForToast.freezesAvailable;
                 if (freezesUsed > 0) {
                      freezeMessages.push({
                         type: 'info',
                         text1: 'Streak Saved!',
-                        text2: `${freezesUsed} freeze(s) used for "${updatedHabit.name}".`
+                        text2: `${freezesUsed} freeze(s) used for "${updatedHabitForToast.name}".`
                     });
                 }
-            } else if (updatedHabit.currentStreak === 0 && originalHabit.currentStreak > 0) {
-                 const freezesConsumed = (originalHabit.freezesAvailable || 0) - updatedHabit.freezesAvailable; // This will be originalHabit.freezesAvailable if reset happened
+            } else if (updatedHabitForToast.currentStreak === 0 && originalHabitForToast.currentStreak > 0) {
+                 const freezesConsumed = (originalHabitForToast.freezesAvailable || 0) - updatedHabitForToast.freezesAvailable; // This will be originalHabitForToast.freezesAvailable if reset happened
                 if (freezesConsumed > 0) {
                      freezeMessages.push({
                         type: 'warn',
                         text1: 'Streak Lost',
-                        text2: `Used ${freezesConsumed} freeze(s) for "${updatedHabit.name}", but more were needed.`
+                        text2: `Used ${freezesConsumed} freeze(s) for "${updatedHabitForToast.name}", but more were needed.`
                     });
                 } else {
                      freezeMessages.push({
                         type: 'warn',
                         text1: 'Streak Lost',
-                        text2: `Streak reset for "${updatedHabit.name}". No freezes were available.`
+                        text2: `Streak reset for "${updatedHabitForToast.name}". No freezes were available.`
                     });
                 }
             }
+          } else {
+             // Even if habit data didn't change, the freeze status might have. Check specifically for that.
+             if (finalHabitState.isFrozenToday !== habitWithStatus.isFrozenToday) {
+                 habitsUpdated = true;
+             }
           }
-          return result.updatedHabit;
+          // Return the final state including the isFrozenToday flag
+          console.log(`Habit: ${habit.name} - Final state for UI:`, finalHabitState);
+          return finalHabitState;
         });
 
         // Save the updated habits only if changes were made
         if (habitsUpdated) {
-          console.log("Habits updated after freeze check, saving...");
+          console.log("Habits updated after freeze check (or freeze status changed), saving...");
           await AsyncStorage.setItem("habits", JSON.stringify(processedHabits));
         }
         
@@ -278,7 +410,11 @@ const HomeScreen = () => {
     };
 
     fetchAndCheckHabits();
-  }, []);
+
+    // Cleanup function if needed, though usually not for one-off injection
+    // return () => { };
+
+  }, []); // Dependency array ensures it runs on mount
 
   useEffect(() => {
     requestNotificationPermissions();
@@ -303,6 +439,8 @@ const HomeScreen = () => {
             // Check if habit is done today
             const today = formatDate(new Date());
             const isCompletedToday = item.lastDone === today;
+            // Determine if the frozen style should be applied
+            const applyFrozenStyle = item.isFrozenToday && !isCompletedToday;
             
             return (
               <Animated.View style={{
@@ -317,10 +455,14 @@ const HomeScreen = () => {
                   style={({ pressed }) => [
                     styles.habitItem,
                     { backgroundColor: habitItemBackgroundColor },
-                    // Apply completed habit style if done today
+                    // Apply frozen style if applicable (and overrides default)
+                    applyFrozenStyle ? styles.frozenHabit : {},
+                    // Apply completed habit style if done today (overrides default, potentially frozen if logic allows)
                     isCompletedToday ? styles.completedHabit : {},
                     // Apply reduced opacity if completed, otherwise apply press opacity
-                    isCompletedToday ? { opacity: 0.6 } : (pressed ? { opacity: 0.7 } : {})
+                    isCompletedToday ? { opacity: 0.6 } : (pressed ? { opacity: 0.7 } : {}),
+                    // If frozen, slightly reduce opacity too? Optional.
+                    applyFrozenStyle ? { opacity: 0.8 } : {},
                   ]}
                   onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
                   onLongPress={() => handleMarkAsDone({ id: item.id })}
@@ -356,7 +498,8 @@ const HomeScreen = () => {
                                 // Use light blue if completed today or streak is 0, otherwise maybe a brighter/different blue?
                                 // Let's try making it slightly less opaque if the habit is active but not done yet today
                                 color: '#4fc3f7', 
-                                opacity: (!isCompletedToday && item.currentStreak > 0) ? 1 : 0.7 
+                                // Adjust opacity based on completion or frozen status?
+                                opacity: (isCompletedToday || applyFrozenStyle) ? 0.7 : 1
                               }
                             ]}>
                               ❄️{item.freezesAvailable}
@@ -378,60 +521,5 @@ const HomeScreen = () => {
     </ThemedView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  habitItem: {
-    alignItems: "stretch",
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  habitDetailsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  streak: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  addButton: {
-    position: "absolute",
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  completedText: {
-    textDecorationLine: 'line-through',
-    opacity: 0.6,
-  },
-  completedHabit: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50', // Green success color
-  },
-});
 
 export default HomeScreen;

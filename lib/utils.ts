@@ -191,6 +191,7 @@ export const checkAndUpdateStreak = (habit: Habit, today: Date): { updatedHabit:
             console.log(`Habit "${updatedHabit.name}": Using ${missedScheduledDaysCount} freeze(s).`);
             updatedHabit.freezesAvailable -= missedScheduledDaysCount;
             streakPreservedByFreeze = true;
+            updatedHabit.freezeUsedOn = formattedToday; // Set freeze used date
              // Update lastDone to the date of the last day covered by a freeze
              // This makes the streak "alive" for the next check/completion
             if (lastMissedDate) {
@@ -205,15 +206,18 @@ export const checkAndUpdateStreak = (habit: Habit, today: Date): { updatedHabit:
             // Reset streak
             updatedHabit.currentStreak = 0;
             streakPreservedByFreeze = false;
+            updatedHabit.freezeUsedOn = undefined; // Clear freeze used date
              // Show toast feedback - handled in UI layer (consider showing consumed freezes)
         }
     } else {
         // No missed scheduled days requiring freezes.
+        updatedHabit.freezeUsedOn = undefined; // Clear freeze used date if no freeze needed
         // Now, check if the streak is naturally alive based on the *original* lastDone date.
         const isNaturallyAlive = isStreakAlive(updatedHabit.frequency, updatedHabit.lastDone);
         if (!isNaturallyAlive && updatedHabit.currentStreak > 0) {
              console.log(`Habit "${updatedHabit.name}": Streak broken naturally (no missed scheduled days, but gap exists). Resetting streak.`);
             updatedHabit.currentStreak = 0;
+            updatedHabit.freezeUsedOn = undefined; // Clear freeze used date
             // Show toast feedback - handled in UI layer
         }
     }

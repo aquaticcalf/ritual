@@ -17,6 +17,8 @@ export const Colors = {
     card: '#FFFFFF',           // White cards for clarity
     modalBackdrop: 'rgba(255, 255, 255, 0.7)', // Translucent white backdrop
     errorColor: '#B00020',     // Standard error color
+    frozenBackground: '#E3F2FD', // Very light blue background for frozen state
+    frozenBorder: '#90CAF9',     // Slightly darker blue border for frozen state
   },
   dark: {
     text: '#FFB300',           // Highlighted text
@@ -28,5 +30,7 @@ export const Colors = {
     card: '#2E2E2E',           // Input field background
     modalBackdrop: 'rgba(0, 0, 0, 0.7)', // Translucent black backdrop
     errorColor: '#CF6679',     // Dark mode error color
+    frozenBackground: '#37474F', // Slightly lighter dark gray/blue background for frozen state
+    frozenBorder: '#4FC3F7',     // Muted cyan border for frozen state
   },
 };
