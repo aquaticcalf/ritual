@@ -6,7 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { formatDate, isStreakAlive } from "@/lib/utils";
+import { formatDate, checkAndUpdateStreak } from "@/lib/utils";
 import { requestNotificationPermissions } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
 import * as Haptics from 'expo-haptics';
@@ -29,46 +29,61 @@ const HomeScreen = () => {
   }
 
   const handleMarkAsDone = async ({ id }: HandleMarkAsDoneParams): Promise<void> => {
-    const habit = habits.find((h) => h.id === id);
-    if (!habit) return;
+    // Find the most up-to-date habit state from the component's state
+    const habitIndex = habits.findIndex((h) => h.id === id);
+    if (habitIndex === -1) return;
+    const habit = habits[habitIndex];
+
     const today = new Date();
     const formatedToday = formatDate(today);
+    const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+    const dayIndex = today.getDay();
+    const todayDayCode = days[dayIndex];
     
-    // If the habit is already marked as done today, ask if user wants to unmark it
+    // --- Handle Unmarking --- 
     if(habit.lastDone === formatedToday) {
-      // Create confirmation dialog based on platform
       const unmarkHabit = () => {
-        // Provide haptic feedback for unmarking
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
         
         const updatedHabits = habits.map((h) => {
           if (h.id === id) {
-            // Decrease streak by 1
-            h.currentStreak = Math.max(0, h.currentStreak - 1);
+            const updatedHabit = { ...h }; // Work on a copy
             
+            // Check if a freeze was potentially granted on this mark
+            const streakBeforeDecrement = updatedHabit.currentStreak;
+            updatedHabit.currentStreak = Math.max(0, updatedHabit.currentStreak - 1);
+            
+            // If decrementing caused a multiple of 5 boundary to be crossed downward,
+            // and a freeze was granted for reaching that multiple, remove the freeze.
+            if (streakBeforeDecrement > 0 && 
+                streakBeforeDecrement % 5 === 0 && 
+                updatedHabit.currentStreak === streakBeforeDecrement - 1) 
+            {
+              console.log(`Habit "${updatedHabit.name}": Removing freeze granted at streak ${streakBeforeDecrement} due to unmarking.`);
+              updatedHabit.freezesAvailable = Math.max(0, (updatedHabit.freezesAvailable || 0) - 1);
+            }
+
             // Restore previous best streak if available
-            if (h.prevBestStreak !== undefined) {
-              h.bestStreak = Math.max(h.prevBestStreak, h.currentStreak);
+            if (updatedHabit.prevBestStreak !== undefined) {
+              updatedHabit.bestStreak = Math.max(updatedHabit.prevBestStreak, updatedHabit.currentStreak);
             }
             
-            // Remove the last entry from heatMap (today's entry)
-            const newHeatMap = [...h.heatMap];
-            newHeatMap.pop();
-            h.heatMap = newHeatMap;
+            // Remove today's entry from heatMap
+            updatedHabit.heatMap = updatedHabit.heatMap.filter(entry => entry.date !== formatedToday);
             
-            // Update lastDone to the date of the new last entry in heatMap, or empty if no entries
-            h.lastDone = newHeatMap.length > 0 ? newHeatMap[newHeatMap.length - 1].date : "";
+            // Update lastDone to the date of the new last entry, or empty if none
+            updatedHabit.lastDone = updatedHabit.heatMap.length > 0 ? updatedHabit.heatMap[updatedHabit.heatMap.length - 1].date : "";
+            
+            return updatedHabit;
           }
           return h;
         });
         
-        // Update state and storage
         setHabits(updatedHabits);
         AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
         
-        // Show success toast for unmarking
         Toast.show({
           type: 'success',
           text1: 'Habit unmarked',
@@ -77,13 +92,12 @@ const HomeScreen = () => {
         });
       };
       
+      // Confirmation Dialog (existing logic is fine)
       if (Platform.OS === 'web') {
-        // For web, use browser's confirm dialog
         if (window.confirm(`Do you want to unmark "${habit.name}" as done for today?`)) {
           unmarkHabit();
         }
       } else {
-        // For mobile, use React Native Alert
         Alert.alert(
           'Unmark Habit',
           `Do you want to unmark "${habit.name}" as done for today?`,
@@ -96,77 +110,82 @@ const HomeScreen = () => {
       return;
     }
     
-    const day = today.getDay();
-    const days = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
-    
-    if(habit.frequency.includes(days[day])) {
-      // Provide haptic feedback only on native platforms
+    // --- Handle Marking as Done --- 
+    // Check if today is a scheduled day
+    if(habit.frequency.includes(todayDayCode)) {
+      // Haptic feedback (existing logic is fine)
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       
-      // Get or create the animation value for this habit
+      // Animation (existing logic is fine)
       if (!scaleAnimations.current[id]) {
         scaleAnimations.current[id] = new Animated.Value(1);
       }
-      
-      // Animate scale up
       Animated.sequence([
-        Animated.spring(scaleAnimations.current[id], {
-          toValue: 1.05,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnimations.current[id], {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        })
+          Animated.spring(scaleAnimations.current[id], { toValue: 1.05, friction: 3, tension: 40, useNativeDriver: true }),
+          Animated.spring(scaleAnimations.current[id], { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
       ]).start();
       
-      // Show success toast
+      // Success Toast (existing logic is fine)
       Toast.show({
         type: 'success',
         text1: 'Marked as done!',
-        text2: `Great job completing "${habit.name}" today!`,
+        text2: `Great job completing "${habit.name}" today!`, 
         position: 'bottom'
       });
       
-      if(isStreakAlive(habit.frequency, habit.lastDone)) {
-        console.log('Streak is alive');
-        const updatedHabits = habits.map((h) => {
-          if (h.id === id) {
-            // Save the previous best streak before updating
-            h.prevBestStreak = h.bestStreak;
-            h.currentStreak += 1;
-            h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
-            h.lastDone = formatedToday;
-            h.heatMap.push({ day: days[day], date: formatedToday });
+      // Update habit state
+      const updatedHabits = habits.map(h => {
+        if (h.id === id) {
+          const updatedHabit = { ...h };
+          
+          // Save previous best streak before updating
+          updatedHabit.prevBestStreak = updatedHabit.bestStreak;
+          
+          // Increment current streak
+          // The streak value is assumed correct from the useEffect check
+          const oldStreak = updatedHabit.currentStreak;
+          updatedHabit.currentStreak += 1;
+          const newStreak = updatedHabit.currentStreak;
+
+          console.log(`Habit "${updatedHabit.name}": Streak updated from ${oldStreak} to ${newStreak}`);
+          
+          // Grant freeze if new streak is a multiple of 5
+          if (newStreak > 0 && newStreak % 5 === 0) {
+            updatedHabit.freezesAvailable = (updatedHabit.freezesAvailable || 0) + 1;
+            console.log(`Habit "${updatedHabit.name}": Freeze granted! New total: ${updatedHabit.freezesAvailable}`);
+            // Optional: Show a toast for gaining a freeze
+            Toast.show({
+                type: 'info',
+                text1: 'Freeze Earned!',
+                text2: `You earned a freeze for "${updatedHabit.name}"! Total: ${updatedHabit.freezesAvailable}`,
+                position: 'bottom'
+            });
           }
-          return h;
-        });
-        setHabits(updatedHabits);
-        await AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
-      } else {
-        console.log('Streak is dead');
-        const updatedHabits = habits.map((h) => {
-          if (h.id === id) {
-            // Save the previous best streak before updating
-            h.prevBestStreak = h.bestStreak;
-            h.currentStreak = 1;
-            h.bestStreak = Math.max(h.bestStreak, h.currentStreak);
-            h.lastDone = formatedToday;
-            h.heatMap.push({ day: days[day], date: formatedToday });
+          
+          // Update best streak
+          updatedHabit.bestStreak = Math.max(updatedHabit.bestStreak, newStreak);
+          
+          // Update last done date
+          updatedHabit.lastDone = formatedToday;
+          
+          // Add to heatmap (ensure no duplicates for the same day)
+          const heatMapEntryExists = updatedHabit.heatMap.some(entry => entry.date === formatedToday);
+          if (!heatMapEntryExists) {
+            updatedHabit.heatMap.push({ day: todayDayCode, date: formatedToday });
           }
-          return h;
-        });
-        setHabits(updatedHabits);
-        await AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
-      }
+          
+          return updatedHabit;
+        }
+        return h;
+      });
+      
+      setHabits(updatedHabits);
+      await AsyncStorage.setItem("habits", JSON.stringify(updatedHabits));
+      
     } else {
-      // Show error toast when trying to mark a habit as done on an unscheduled day
+      // Not scheduled Toast (existing logic is fine)
       Toast.show({
         type: 'error',
         text1: 'Not scheduled for today',
@@ -174,7 +193,7 @@ const HomeScreen = () => {
         position: 'bottom'
       });
       
-      // Only trigger haptic feedback on native platforms
+      // Haptic feedback (existing logic is fine)
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
@@ -182,28 +201,83 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    const fetchHabits = async () => {
+    const fetchAndCheckHabits = async () => {
       try {
-        const existingHabits = await AsyncStorage.getItem("habits");
-        const habits = existingHabits ? JSON.parse(existingHabits) : [];
+        const existingHabitsJson = await AsyncStorage.getItem("habits");
+        let habitsData: Habit[] = existingHabitsJson ? JSON.parse(existingHabitsJson) : [];
 
-        // Check if the streak is alive for each habit
-        habits.forEach((habit: Habit) => {
-          if (!isStreakAlive(habit.frequency, habit.lastDone)) {
-            // update the streak to 0 if it's not alive
-            habit.currentStreak = 0;
+        const today = new Date();
+        let habitsUpdated = false;
+        let freezeMessages: { type: 'info' | 'warn', text1: string, text2: string }[] = [];
+
+        // Check and update streak/freezes for each habit
+        const processedHabits = habitsData.map(habit => {
+          // Initialize freezesAvailable if it's missing (for backward compatibility)
+          if (habit.freezesAvailable === undefined) {
+            habit.freezesAvailable = 0;
           }
+          
+          const result = checkAndUpdateStreak(habit, today);
+          if (JSON.stringify(result.updatedHabit) !== JSON.stringify(habit)) {
+            habitsUpdated = true; // Mark if any habit was changed
+            // Add toast messages based on freeze consumption/streak reset
+            const originalHabit = habit; // Keep original for comparison
+            const updatedHabit = result.updatedHabit;
+
+            if (result.streakPreservedByFreeze) {
+                const freezesUsed = (originalHabit.freezesAvailable || 0) - updatedHabit.freezesAvailable;
+                if (freezesUsed > 0) {
+                     freezeMessages.push({
+                        type: 'info',
+                        text1: 'Streak Saved!',
+                        text2: `${freezesUsed} freeze(s) used for "${updatedHabit.name}".`
+                    });
+                }
+            } else if (updatedHabit.currentStreak === 0 && originalHabit.currentStreak > 0) {
+                 const freezesConsumed = (originalHabit.freezesAvailable || 0) - updatedHabit.freezesAvailable; // This will be originalHabit.freezesAvailable if reset happened
+                if (freezesConsumed > 0) {
+                     freezeMessages.push({
+                        type: 'warn',
+                        text1: 'Streak Lost',
+                        text2: `Used ${freezesConsumed} freeze(s) for "${updatedHabit.name}", but more were needed.`
+                    });
+                } else {
+                     freezeMessages.push({
+                        type: 'warn',
+                        text1: 'Streak Lost',
+                        text2: `Streak reset for "${updatedHabit.name}". No freezes were available.`
+                    });
+                }
+            }
+          }
+          return result.updatedHabit;
         });
 
-        // Save the updated habits
-        await AsyncStorage.setItem("habits", JSON.stringify(habits));
-        setHabits(habits);
+        // Save the updated habits only if changes were made
+        if (habitsUpdated) {
+          console.log("Habits updated after freeze check, saving...");
+          await AsyncStorage.setItem("habits", JSON.stringify(processedHabits));
+        }
+        
+        setHabits(processedHabits);
+
+        // Show accumulated toast messages after setting state
+        freezeMessages.forEach(msg => {
+            Toast.show({ ...msg, position: 'bottom' });
+        });
+
       } catch (error) {
-        console.error("Error fetching habits:", error);
+        console.error("Error fetching and checking habits:", error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not load or update habits.',
+          position: 'bottom'
+        });
       }
     };
 
-    fetchHabits();
+    fetchAndCheckHabits();
   }, []);
 
   useEffect(() => {
@@ -268,10 +342,27 @@ const HomeScreen = () => {
                           { color: secondaryTextColor, fontSize: 12 }
                         ]}>{item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}</ThemedText>
                       </View>
-                      <ThemedText style={[
-                        styles.streak, 
-                        { color: textColor }
-                      ]}>{item.currentStreak} 🔥</ThemedText>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <ThemedText style={[
+                              styles.streak,
+                              { color: textColor }
+                          ]}>{item.currentStreak} 🔥</ThemedText>
+                          {/* Display freezes, potentially styled differently if streak is active but not done today */}
+                          {item.freezesAvailable > 0 && (
+                            <ThemedText style={[
+                              styles.streak, 
+                              {
+                                fontSize: 16, 
+                                // Use light blue if completed today or streak is 0, otherwise maybe a brighter/different blue?
+                                // Let's try making it slightly less opaque if the habit is active but not done yet today
+                                color: '#4fc3f7', 
+                                opacity: (!isCompletedToday && item.currentStreak > 0) ? 1 : 0.7 
+                              }
+                            ]}>
+                              ❄️{item.freezesAvailable}
+                            </ThemedText>
+                          )}
+                      </View>
                     </View>
                     <WeekMap heatMap={item.heatMap} />
                   </View>

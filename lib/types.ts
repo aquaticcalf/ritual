@@ -16,4 +16,6 @@ export type Habit = {
     lastDone: string; // 'dd/mm/yyyy'
     createdOn: string; // ISO string
     heatMap: Cell[];
+    freezesAvailable: number;
+    lastCheckedDate?: string; // 'dd/mm/yyyy', track last freeze check
 };

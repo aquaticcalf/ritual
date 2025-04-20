@@ -86,6 +86,10 @@ const HabitPage = () => {
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Best Streak</ThemedText>
             <ThemedText style={[styles.statValue, { color: secondaryTextColor }]}>{habitData.bestStreak}🔥</ThemedText>
           </ThemedView>
+          <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
+            <ThemedText style={[styles.statTitle, { color: textColor }]}>Freezes</ThemedText>
+            <ThemedText style={[styles.statValue, { color: '#4fc3f7' }]}>❄️{habitData.freezesAvailable || 0}</ThemedText>
+          </ThemedView>
         </ThemedView>
 
         <ThemedView style={[styles.infoBox, { backgroundColor: cardBackgroundColor }]}>
