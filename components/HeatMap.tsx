@@ -9,7 +9,8 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 interface HeatMapProps {
   year?: number;
   heatMap?: Cell[];
-  createdOn?: string; // Add createdOn prop
+  freezeMap?: Cell[];
+  createdOn?: string;
 }
 
 // Month names for display
@@ -45,11 +46,11 @@ const extractCreationInfo = (createdOn: string | undefined): { year: number, mon
   };
 };
 
-// For a given month, get the array of days that should be marked green
-const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number): number[] => {
-  if (!heatMap || !heatMap.length) return [];
+// Helper function to get marked days for a specific map and month
+const getMarkedDaysForMonth = (map: Cell[] | undefined, targetMonth: number): number[] => {
+  if (!map || !map.length) return [];
   
-  return heatMap
+  return map
     .filter(cell => {
       const dateInfo = extractMonthAndDay(cell.date);
       return dateInfo && dateInfo.month === targetMonth;
@@ -61,31 +62,28 @@ const getGreenDaysForMonth = (heatMap: Cell[] | undefined, targetMonth: number):
     .filter(day => day > 0);
 };
 
-export function HeatMap({ year = new Date().getFullYear(), heatMap = [], createdOn }: HeatMapProps) {
+// Accept freezeMap prop
+export function HeatMap({ 
+  year = new Date().getFullYear(), 
+  heatMap = [], 
+  freezeMap = [],
+  createdOn 
+}: HeatMapProps) {
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
   const isLeapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  // Create a ref for the ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
-  // Get current month
   const currentMonth = new Date().getMonth();
-  
-  // Get creation date info
   const creationInfo = extractCreationInfo(createdOn);
 
-  // Calculate first day of each month
   const getFirstDayOfMonth = (month: number) => {
     return new Date(year, month, 1).getDay();
   };
 
-  // Scroll to current month when component mounts
   useEffect(() => {
-    // Add a small delay to ensure the ScrollView has rendered
     const timer = setTimeout(() => {
       if (scrollViewRef.current) {
-        // Calculate position to scroll to - estimate width of each month container + margin
-        const MONTH_WIDTH = 120; // Approximate width of each month container including margin
+        const MONTH_WIDTH = 120; 
         const scrollToX = currentMonth * MONTH_WIDTH;
-        
         scrollViewRef.current.scrollTo({ x: scrollToX, animated: true });
       }
     }, 100);
@@ -103,15 +101,15 @@ export function HeatMap({ year = new Date().getFullYear(), heatMap = [], created
         contentContainerStyle={styles.scrollContent}
       >
         {MONTH_NAMES.map((monthName, index) => {
-          // Get green days for this specific month from the heatMap
-          const greenDays = getGreenDaysForMonth(heatMap, index);
+          // Get green days (completions)
+          const greenDays = getMarkedDaysForMonth(heatMap, index);
+          // Get blue days (freezes)
+          const blueDays = getMarkedDaysForMonth(freezeMap, index);
           
-          // Calculate if this month is before creation date
           const isBeforeCreationMonth = creationInfo && 
             (year < creationInfo.year || 
              (year === creationInfo.year && index < creationInfo.month));
           
-          // For same month as creation, pass the day to show which days should be dimmed
           const creationDay = (creationInfo && 
                               year === creationInfo.year && 
                               index === creationInfo.month) 
@@ -127,6 +125,7 @@ export function HeatMap({ year = new Date().getFullYear(), heatMap = [], created
                   firstDay={getFirstDayOfMonth(index)}
                   isLeapYear={isLeapYear}
                   greens={greenDays}
+                  blues={blueDays}
                   isBeforeCreationMonth={isBeforeCreationMonth ?? undefined}
                   creationDay={creationDay}
                 />

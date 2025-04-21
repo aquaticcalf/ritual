@@ -149,7 +149,8 @@ const HabitPage = () => {
 
         <HeatMap 
           year={new Date().getFullYear()} 
-          heatMap={habitData.heatMap} 
+          heatMap={habitData.heatMap || []} 
+          freezeMap={habitData.freezeMap || []}
           createdOn={habitData.createdOn} 
         />
       </ScrollView>
@@ -182,7 +183,8 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
     borderRadius: 10,
     alignItems: 'center',
     marginHorizontal: 5,
@@ -225,7 +227,6 @@ const styles = StyleSheet.create({
   },
   frequencyContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     marginTop: 10,
     justifyContent: 'space-between',
   },

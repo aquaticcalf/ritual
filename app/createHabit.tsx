@@ -141,7 +141,9 @@ const CreateHabitScreen = () => {
       prevBestStreak: Math.max(0, initialStreak - 1),
       lastDone: historicalData.lastDone,
       createdOn: historicalData.createdOnDate,
-      heatMap: historicalData.heatMap
+      heatMap: historicalData.heatMap,
+      freezeMap: [],
+      freezesAvailable: 0
     };
 
     // Update the state for UI consistency (not needed for the habit object)

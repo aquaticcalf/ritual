@@ -16,7 +16,7 @@ export type Habit = {
     lastDone: string; // 'dd/mm/yyyy'
     createdOn: string; // ISO string
     heatMap: Cell[];
+    freezeMap: Cell[]; // Added: Stores dates where a freeze was used
     freezesAvailable: number;
     lastCheckedDate?: string; // 'dd/mm/yyyy', track last freeze check
-    freezeUsedOn?: string; // 'dd/mm/yyyy', track when a freeze was last used to save streak
 };

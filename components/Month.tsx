@@ -1,6 +1,6 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
-import { Text, StyleSheet } from "react-native";
+import { Text, StyleSheet, ViewStyle } from "react-native";
 import { ThemedView } from "./ThemedView";
 
 interface MonthComponentProps {
@@ -12,6 +12,8 @@ interface MonthComponentProps {
   isLeapYear: boolean;
   /** List of dates to highlight in green */
   greens: number[];
+  /** List of dates to highlight in blue */
+  blues?: number[];
   /** If true, this entire month is before the habit was created */
   isBeforeCreationMonth?: boolean;
   /** If > 0, days before this day in this month should be dimmed */
@@ -26,58 +28,71 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
   firstDay,
   isLeapYear,
   greens,
+  blues = [],
   isBeforeCreationMonth = false,
   creationDay = -1,
 }) => {
   const backgroundColor = useThemeColor({}, 'background');
-  const tintColor = useThemeColor({}, 'tint');
-  
-  // Determine number of days in the specified month
+  const greenColor = useThemeColor({}, 'tint');
+  const blueColor = useThemeColor({}, 'frozenBackground');
+  const grayColor = useThemeColor({}, 'tabIconDefault');
+  const textColorOnColored = useThemeColor({}, 'background');
+  const textColorOnGray = grayColor;
+
   const daysInMonth = isLeapYear
     ? LEAP_YEAR_DAYS_IN_MONTH[month]
     : DAYS_IN_MONTH[month];
 
-  // We want 6 columns × 7 rows = 42 total cells
   const COLUMNS = 6;
   const ROWS = 7;
   const totalCells = COLUMNS * ROWS;
-
-  // Create an array of 42 cells, all initially null
   const cells: Array<number | null> = Array(totalCells).fill(null);
 
-  // Fill the array so that day 1 starts at index = firstDay,
-  // day 2 at index = firstDay + 1, etc., going top-to-bottom,
-  // then wrapping to the next column.
   for (let i = 0; i < daysInMonth; i++) {
     const index = i + firstDay;
     if (index < totalCells) {
-      cells[index] = i + 1; // days are 1-based
+      cells[index] = i + 1;
     }
   }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       {cells.map((day, index) => {
-        // Determine if this cell is before the creation date
         const isBeforeCreation = isBeforeCreationMonth || 
           (day !== null && creationDay > 0 && day < creationDay);
         
-        // Determine cell color
-        const isGreen = day !== null && greens.includes(day);
+        let cellBackgroundColor = 'transparent';
+        let cellTextColor = textColorOnGray;
+        let showText = false;
+
+        if (day !== null) {
+          const isGreen = greens.includes(day);
+          const isBlue = blues.includes(day);
+          showText = true;
+
+          if (isGreen) {
+            cellBackgroundColor = greenColor;
+            cellTextColor = textColorOnColored;
+          } else if (isBlue) {
+            cellBackgroundColor = blueColor;
+            cellTextColor = textColorOnColored;
+          } else {
+            cellBackgroundColor = grayColor + '40';
+            cellTextColor = textColorOnGray;
+          }
+        }
         
+        const opacity = isBeforeCreation ? 0.3 : 1;
+
         return (
           <ThemedView
             key={index}
             style={[
-              styles.cell,
-              day
-                ? isGreen
-                  ? [styles.greenCell, { backgroundColor: tintColor, opacity: isBeforeCreation ? 0.3 : 1 }]
-                  : [styles.grayCell, { opacity: isBeforeCreation ? 0.3 : 1 }]
-                : styles.transparentCell,
+              styles.cell, 
+              { backgroundColor: cellBackgroundColor, opacity }
             ]}
           >
-            {day && <Text style={[styles.text, { opacity: isBeforeCreation ? 0.3 : 1 }]}>{day}</Text>}
+            {showText && <Text style={[styles.text, { color: cellTextColor }]}>{day}</Text>}
           </ThemedView>
         );
       })}
@@ -87,13 +102,10 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    // Make items flow top-to-bottom, then wrap to the next column
     flexDirection: "column",
     flexWrap: "wrap",
-
-    // Adjust these so 7 items fit vertically, 6 columns horizontally
-    height: 7 * 14, // Enough height for 7 cells + margins
-    width: 6 * 14,  // Enough width for 6 columns + margins
+    height: 7 * 14, 
+    width: 6 * 14,  
   },
   cell: {
     width: 12,
@@ -103,18 +115,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 2,
   },
-  grayCell: {
-    backgroundColor: "gray",
-  },
-  greenCell: {
-    backgroundColor: "green", // This will be overridden by the tintColor
-  },
-  transparentCell: {
-    backgroundColor: "transparent",
-  },
   text: {
     fontSize: 8,
-    color: "white",
   },
 });
 

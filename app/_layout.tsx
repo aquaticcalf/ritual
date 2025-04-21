@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { ToastShowParams } from 'react-native-toast-message';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -83,6 +84,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const backgroundColor = useThemeColor({}, 'background');
 
   useEffect(() => {
     if (loaded) {
@@ -101,7 +103,7 @@ export default function RootLayout() {
         <Stack.Screen name="createHabit" options={{ title: 'Create Habit' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'light' ? 'dark' : 'light'} backgroundColor={backgroundColor} />
       <Toast config={toastConfig} />
     </ThemeProvider>
   );
