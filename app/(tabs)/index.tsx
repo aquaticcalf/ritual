@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View } from "react-native";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View, ActivityIndicator } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -15,6 +15,7 @@ import WeekMap from '@/components/WeekMap';
 
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -183,6 +184,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const fetchHabits = async () => {
+      setIsLoading(true);
       try {
         const existingHabits = await AsyncStorage.getItem("habits");
         const habits = existingHabits ? JSON.parse(existingHabits) : [];
@@ -200,6 +202,8 @@ const HomeScreen = () => {
         setHabits(habits);
       } catch (error) {
         console.error("Error fetching habits:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -213,7 +217,12 @@ const HomeScreen = () => {
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <ThemedText style={[styles.header, { color: textColor }]}>Habits Streak</ThemedText>
-      {habits.length === 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={buttonColor} />
+          <ThemedText style={[styles.loadingText, { color: textColor }]}>Loading habits...</ThemedText>
+        </View>
+      ) : habits.length === 0 ? (
         <ThemedText style={{ color: textColor, opacity: 0.5 }}>No habits yet, create a habit by clicking + button</ThemedText>
       ) : (
         <FlatList
@@ -340,6 +349,15 @@ const styles = StyleSheet.create({
   completedHabit: {
     borderLeftWidth: 4,
     borderLeftColor: '#4CAF50', // Green success color
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
   },
 });
 
