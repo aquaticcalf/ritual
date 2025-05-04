@@ -3,33 +3,40 @@
  * Maintains visual harmony with the time picker component's color scheme.
  */
 
-const tintColorLight = '#FFB300';  // Yellow highlight
-const tintColorDark = '#FFB300';   // Same highlight for dark theme
-
 export const Colors = {
   light: {
-    text: '#333333',           // Dark gray for readability on light background
-    background: '#F5F5F5',     // Light gray background
-    tint: tintColorLight,      
-    icon: '#FFA000',           // Slightly softer yellow for icons
-    tabIconDefault: '#A0A0A0', // Muted gray for unselected tabs
-    tabIconSelected: tintColorLight,
-    card: '#FFFFFF',           // White cards for clarity
-    modalBackdrop: 'rgba(255, 255, 255, 0.7)', // Translucent white backdrop
-    errorColor: '#B00020',     // Standard error color
+    text: '#4A3B33',           // Dark foreground
+    background: '#FDFBF7',     // Light background
+    tint: '#D97706',          // Primary - Brighter orange-brown
+    icon: '#D97706',          // Primary foreground - Matching tint
+    tabIconDefault: '#78716C', // Muted foreground
+    tabIconSelected: '#D97706', // Primary - Matching tint
+    card: '#F8F4EE',          // Card background
+    modalBackdrop: 'rgba(255, 255, 255, 0.7)',
+    errorColor: '#991B1B',     // Destructive
+    secondary: '#E4C090',      // Secondary
+    accent: '#f2daba',         // Accent
+    border: '#E4D9BC',         // Border
+    input: '#E4D9BC',          // Input
+    muted: '#F1E9DA',          // Muted
     frozenBackground: '#E3F2FD', // Very light blue background for frozen state
     frozenBorder: '#90CAF9',     // Slightly darker blue border for frozen state
   },
   dark: {
-    text: '#FFB300',           // Highlighted text
-    background: '#1E1E1E',     // Dark background
-    tint: tintColorDark,       
-    icon: '#FFB300',           // Highlight icon
-    tabIconDefault: '#B0B0B0', // Unselected tab
-    tabIconSelected: tintColorDark,
-    card: '#2E2E2E',           // Input field background
-    modalBackdrop: 'rgba(0, 0, 0, 0.7)', // Translucent black backdrop
-    errorColor: '#CF6679',     // Dark mode error color
+    text: '#F5F5F4',           // Light foreground
+    background: '#1C1917',     // Dark background
+    tint: '#F97316',          // Primary
+    icon: '#F97316',          // Primary foreground
+    tabIconDefault: '#A8A29E', // Muted foreground
+    tabIconSelected: '#F97316', // Primary
+    card: '#292524',          // Card background
+    modalBackdrop: 'rgba(0, 0, 0, 0.7)',
+    errorColor: '#DC2626',     // Destructive
+    secondary: '#57534E',      // Secondary
+    accent: '#1e4252',         // Accent
+    border: '#44403C',         // Border
+    input: '#44403C',          // Input
+    muted: '#292524',          // Muted
     frozenBackground: '#37474F', // Slightly lighter dark gray/blue background for frozen state
     frozenBorder: '#4FC3F7',     // Muted cyan border for frozen state
   },

@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
-import { Button, MD3DarkTheme } from "react-native-paper";
+import { Button, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { TimePickerModal } from "react-native-paper-dates";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider as PaperProvider } from "react-native-paper";
-import { Colors } from "@/constants/Colors";
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface TimePickerProps {
   isEditing: boolean;
@@ -14,82 +14,99 @@ interface TimePickerProps {
 
 const TimePicker: React.FC<TimePickerProps> = ({ isEditing, time, onTimeChange }) => {
   const [visible, setVisible] = useState(isEditing ? false : true);
+  const colorScheme = useColorScheme();
   
-  // Get dark theme colors regardless of system theme
-  const backgroundColor = Colors.dark.background;
-  const textColor = Colors.dark.text;
-  const buttonColor = Colors.dark.tint;
-  const cardColor = Colors.dark.card;
-  const tabIconDefault = Colors.dark.tabIconDefault;
-  const iconColor = Colors.dark.icon;
-  
-  // Use MD3 dark theme as base
-  const baseTheme = MD3DarkTheme;
+  // Define light theme colors
+  const lightThemeColors = {
+    background: '#FDFBF7',
+    text: '#4A3B33',
+    primary: '#B45309',
+    card: '#F8F4EE',
+    secondary: '#E4C090',
+    accent: '#f2daba',
+    border: '#E4D9BC',
+    muted: '#78716C',
+    error: '#991B1B'
+  };
 
-  // Always use dark theme colors
-  const themeColors = Colors.dark;
+  // Define dark theme colors
+  const darkThemeColors = {
+    background: '#1C1917',
+    text: '#F5F5F4',
+    primary: '#F97316',
+    card: '#292524',
+    secondary: '#57534E',
+    accent: '#1e4252',
+    border: '#44403C',
+    muted: '#A8A29E',
+    error: '#DC2626'
+  };
+
+  // Use colors based on theme
+  const themeColors = colorScheme === 'dark' ? darkThemeColors : lightThemeColors;
+  const baseTheme = colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme;
 
   // Create a complete theme object for PaperProvider with all MD3 properties
   const paperTheme = {
     ...baseTheme,
-    dark: true,
+    dark: colorScheme === 'dark',
     version: 3 as const,
     colors: {
       ...baseTheme.colors,
       // Primary colors (main action colors)
-      primary: buttonColor,
+      primary: themeColors.primary,
       onPrimary: themeColors.card,
       primaryContainer: themeColors.background,
-      onPrimaryContainer: buttonColor,
+      onPrimaryContainer: themeColors.primary,
       
       // Secondary colors (complementary actions)
-      secondary: iconColor,
+      secondary: themeColors.secondary,
       onSecondary: themeColors.background,
       secondaryContainer: themeColors.card,
-      onSecondaryContainer: buttonColor,
+      onSecondaryContainer: themeColors.primary,
       
       // Tertiary colors (alternative actions)
-      tertiary: iconColor,
+      tertiary: themeColors.accent,
       onTertiary: themeColors.background,
       tertiaryContainer: themeColors.card,
-      onTertiaryContainer: buttonColor,
+      onTertiaryContainer: themeColors.primary,
       
-      // Neutral colors (backgrounds) - ENSURING SOLID COLORS HERE
-      background: backgroundColor, // Solid background
-      onBackground: textColor,
-      surface: cardColor, // Solid surface color for modal
-      onSurface: textColor,
+      // Neutral colors (backgrounds)
+      background: themeColors.background,
+      onBackground: themeColors.text,
+      surface: themeColors.card,
+      onSurface: themeColors.text,
       surfaceVariant: themeColors.background,
-      onSurfaceVariant: themeColors.tabIconDefault,
+      onSurfaceVariant: themeColors.muted,
       
-      // Additional surface colors (disabled states)
+      // Additional surface colors
       surfaceDisabled: themeColors.card + '40',
-      onSurfaceDisabled: themeColors.tabIconDefault,
+      onSurfaceDisabled: themeColors.muted,
       
       // Outline
-      outline: themeColors.tabIconDefault,
+      outline: themeColors.border,
       outlineVariant: themeColors.card,
       
       // Error colors
-      error: themeColors.errorColor,
-      onError: themeColors.background,
-      errorContainer: themeColors.errorColor + '20',
-      onErrorContainer: themeColors.errorColor,
+      error: themeColors.error,
+      onError: colorScheme === 'dark' ? '#FFFFFF' : themeColors.background,
+      errorContainer: themeColors.error + '20',
+      onErrorContainer: themeColors.error,
       
       // Misc colors
       shadow: themeColors.background + '40',
       inverseSurface: themeColors.card,
       inverseOnSurface: themeColors.background,
       inversePrimary: themeColors.background,
-      backdrop: themeColors.modalBackdrop,
+      backdrop: colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
       
       // Plain text color
-      text: textColor,
+      text: themeColors.text,
       
       // For placeholder text
-      placeholder: tabIconDefault,
+      placeholder: themeColors.muted,
       
-      // Elevation (for tinting surfaces) - NO TRANSPARENCY FOR SURFACES
+      // Elevation (for tinting surfaces)
       elevation: {
         level0: 'transparent',
         level1: themeColors.card,
@@ -127,8 +144,8 @@ const TimePicker: React.FC<TimePickerProps> = ({ isEditing, time, onTimeChange }
         <Button 
           mode="contained" 
           onPress={() => setVisible(true)}
-          buttonColor={buttonColor}
-          textColor={themeColors.card}
+          buttonColor={themeColors.primary}
+          textColor={themeColors.background}
         >
           {time ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Set Time"}
         </Button>
