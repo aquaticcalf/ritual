@@ -387,7 +387,7 @@ const HomeScreen = () => {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <ThemedText style={[styles.header, { color: textColor }]}>Habits Streak</ThemedText>
+      <ThemedText style={[styles.header, { color: textColor }]}>Ritual</ThemedText>
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={buttonColor} />

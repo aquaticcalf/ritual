@@ -25,7 +25,7 @@ export async function reloadHabitReminders(habits: Habit[]) {
   
   const notifications = await Notifications.getAllScheduledNotificationsAsync();
   for (const notification of notifications) {
-    if (notification.content.title === 'Habit Reminder') {
+    if (notification.content.title === 'Ritual') {
       await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }
   }
@@ -44,7 +44,7 @@ export async function turnOffAllHabitReminders() {
   
   const notifications = await Notifications.getAllScheduledNotificationsAsync();
   for (const notification of notifications) {
-    if (notification.content.title === 'Habit Reminder') {
+    if (notification.content.title === 'Ritual') {
       await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }
   }
@@ -97,7 +97,7 @@ export async function scheduleHabitReminder(habit: Habit) {
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Habit Reminder',
+        title: 'Ritual',
         body: `Save your streak, Time to ${habit.name}`,
       },
       trigger: {
