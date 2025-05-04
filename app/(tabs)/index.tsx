@@ -357,6 +357,7 @@ const HomeScreen = () => {
         }
 
         setHabits(processedHabits);
+        setIsLoading(false);
 
         // Show accumulated toast messages after setting state
         const uniqueMessages = new Map<string, { type: 'info' | 'warn', text1: string, text2: string }>();
@@ -387,7 +388,12 @@ const HomeScreen = () => {
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <ThemedText style={[styles.header, { color: textColor }]}>Habits Streak</ThemedText>
-      {habits.length === 0 ? (
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={buttonColor} />
+          <ThemedText style={{ marginTop: 10, color: textColor }}>Loading habits...</ThemedText>
+        </View>
+      ) : habits.length === 0 ? (
         <ThemedText style={{ color: textColor, opacity: 0.5 }}>No habits yet, create a habit by clicking + button</ThemedText>
       ) : (
         <FlatList
