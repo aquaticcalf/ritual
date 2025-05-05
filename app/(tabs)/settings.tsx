@@ -1,4 +1,4 @@
-import { StyleSheet, Alert, TouchableOpacity, Switch, Platform, Modal, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, Switch, Platform, Modal, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -10,6 +10,8 @@ import { ThemePreference, getThemePreference, saveThemePreference } from '@/lib/
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 import { generateTestHabits } from '@/lib/testHabits';
+import { useColorScheme } from 'react-native';
+import { CustomAlert } from '@/components/CustomAlert';
 
 // Helper function to get display name for theme
 const getThemeDisplayName = (themeValue: ThemePreference): string => {
@@ -22,6 +24,7 @@ const getThemeDisplayName = (themeValue: ThemePreference): string => {
 };
 
 export default function Settings() {
+  const colorScheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const iconColor = useThemeColor({}, 'icon');
@@ -32,6 +35,10 @@ export default function Settings() {
   const [theme, setTheme] = useState<ThemePreference>('system');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [themeModalVisible, setThemeModalVisible] = useState(false); // State for theme modal
+  const [showClearDataAlert, setShowClearDataAlert] = useState(false);
+  const [showNotificationsUnavailableAlert, setShowNotificationsUnavailableAlert] = useState(false);
+  const [showReloadSuccessAlert, setShowReloadSuccessAlert] = useState(false);
+  const [showReloadErrorAlert, setShowReloadErrorAlert] = useState(false);
   const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
@@ -82,7 +89,7 @@ export default function Settings() {
 
   const handleReloadReminders = async () => {
     if (isWeb) {
-      Alert.alert('Not Available', 'Notifications are not available on web platforms');
+      setShowNotificationsUnavailableAlert(true);
       return;
     }
 
@@ -90,16 +97,16 @@ export default function Settings() {
       const storedHabits = await AsyncStorage.getItem('habits');
       const habits = storedHabits ? JSON.parse(storedHabits) : [];
       await reloadHabitReminders(habits);
-      Alert.alert('Success', 'Habit reminders reloaded successfully');
+      setShowReloadSuccessAlert(true);
     } catch (error) {
       console.error('Failed to reload habit reminders:', error);
-      Alert.alert('Error', 'Failed to reload habit reminders');
+      setShowReloadErrorAlert(true);
     }
   };
 
   const handleToggleNotifications = async () => {
     if (isWeb) {
-      Alert.alert('Not Available', 'Notifications are not available on web platforms');
+      setShowNotificationsUnavailableAlert(true);
       return;
     }
 
@@ -114,7 +121,7 @@ export default function Settings() {
       setNotificationsEnabled(!notificationsEnabled);
     } catch (error) {
       console.error('Failed to toggle habit reminders:', error);
-      Alert.alert('Error', 'Failed to toggle habit reminders');
+      setShowReloadErrorAlert(true);
     }
   };
 
@@ -141,40 +148,47 @@ export default function Settings() {
     }
   };
 
-  const handleClearStorage = async () => {
-    const confirmClear = () => {
-      AsyncStorage.clear().then(() => {
-        Toast.show({
-          type: 'success',
-          text1: 'Storage Cleared',
-          text2: 'All habits and settings have been cleared',
-          position: 'bottom',
-          visibilityTime: 2000,
-        });
-      }).catch((error) => {
-        console.error('Error clearing storage:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to clear storage',
-          position: 'bottom',
-        });
-      });
-    };
+  const confirmClear = async () => {
+    try {
+      // Get current theme preference
+      const themePreference = await AsyncStorage.getItem('themePreference');
+      
+      // Clear all data
+      await AsyncStorage.clear();
+      
+      // Restore theme preference if it existed
+      if (themePreference) {
+        await AsyncStorage.setItem('themePreference', themePreference);
+      }
 
+      // Turn off all notifications since habits are cleared
+      await turnOffAllHabitReminders();
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Storage Cleared',
+        text2: 'All habits have been cleared',
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to clear storage',
+        position: 'bottom',
+      });
+    }
+  };
+
+  const handleClearStorage = async () => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+      if (window.confirm('Are you sure you want to clear all habits? This cannot be undone.')) {
         confirmClear();
       }
     } else {
-      Alert.alert(
-        'Clear All Data',
-        'Are you sure you want to clear all data? This cannot be undone.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Clear', onPress: confirmClear, style: 'destructive' }
-        ]
-      );
+      setShowClearDataAlert(true);
     }
   };
 
@@ -276,6 +290,70 @@ export default function Settings() {
           </ThemedView>
         </View>
       </Modal>
+
+      <CustomAlert
+        visible={showClearDataAlert}
+        title="Clear Habits Data"
+        message="Are you sure you want to clear all habits? This cannot be undone."
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowClearDataAlert(false),
+            style: "cancel"
+          },
+          {
+            text: "Clear",
+            onPress: () => {
+              setShowClearDataAlert(false);
+              confirmClear();
+            },
+            style: "destructive"
+          }
+        ]}
+        onDismiss={() => setShowClearDataAlert(false)}
+      />
+
+      <CustomAlert
+        visible={showNotificationsUnavailableAlert}
+        title="Not Available"
+        message="Notifications are not available on web platforms"
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowNotificationsUnavailableAlert(false),
+            style: "default"
+          }
+        ]}
+        onDismiss={() => setShowNotificationsUnavailableAlert(false)}
+      />
+
+      <CustomAlert
+        visible={showReloadSuccessAlert}
+        title="Success"
+        message="Habit reminders reloaded successfully"
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowReloadSuccessAlert(false),
+            style: "default"
+          }
+        ]}
+        onDismiss={() => setShowReloadSuccessAlert(false)}
+      />
+
+      <CustomAlert
+        visible={showReloadErrorAlert}
+        title="Error"
+        message="Failed to reload habit reminders"
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowReloadErrorAlert(false),
+            style: "default"
+          }
+        ]}
+        onDismiss={() => setShowReloadErrorAlert(false)}
+      />
     </ThemedView>
   );
 }

@@ -17,74 +17,87 @@ SplashScreen.preventAutoHideAsync();
 /*
   1. Create the config
 */
-const toastConfig = {
-  /*
-    Overwrite 'success' type, modifying the existing BaseToast component
-  */
-  success: (props: ToastShowParams) => (
-    <BaseToast
-      {...props}
-      style={{ borderLeftColor: '#69C779' }} // Example: Keep default green or customize
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400'
-      }}
-    />
-  ),
-  /*
-    Overwrite 'error' type, modifying the existing ErrorToast component
-  */
-  error: (props: ToastShowParams) => (
-    <ErrorToast
-      {...props}
-      style={{ borderLeftColor: '#FF6347' }} // Example: Keep default red or customize
-      text1Style={{
-        fontSize: 17
-      }}
-      text2Style={{
-        fontSize: 15
-      }}
-    />
-  ),
-   /*
-    Overwrite 'info' type, modifying the existing BaseToast component
-  */
-  info: (props: ToastShowParams) => (
-    <BaseToast
-      {...props}
-      style={{ borderLeftColor: '#87CEFA' }} // Example: Light blue for info
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400'
-      }}
-    />
-  ),
-  /*
-    Define our custom 'warn' type
-    Based on ErrorToast structure but with a warning color
-  */
-  warn: (props: ToastShowParams) => (
-    <ErrorToast
-      {...props}
-      style={{ borderLeftColor: '#FFA726' }} // Amber/Orange color for warnings
-      text1Style={{
-        fontSize: 17
-      }}
-      text2Style={{
-        fontSize: 15
-      }}
-    />
-  )
-};
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   const backgroundColor = useThemeColor({}, 'background');
+
+  const toastConfig = {
+    success: (props: ToastShowParams) => (
+      <BaseToast
+        {...props}
+        style={[
+          { borderLeftColor: '#69C779' },
+          colorScheme === 'dark' ? { backgroundColor: '#292524' } : { backgroundColor: '#F8F4EE' }
+        ]}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{
+          fontSize: 15,
+          fontWeight: '400',
+          color: colorScheme === 'dark' ? '#F5F5F4' : '#4A3B33'
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: colorScheme === 'dark' ? '#A8A29E' : '#78716C'
+        }}
+      />
+    ),
+    error: (props: ToastShowParams) => (
+      <ErrorToast
+        {...props}
+        style={[
+          { borderLeftColor: '#DC2626' },
+          colorScheme === 'dark' ? { backgroundColor: '#292524' } : { backgroundColor: '#F8F4EE' }
+        ]}
+        text1Style={{
+          fontSize: 15,
+          color: colorScheme === 'dark' ? '#F5F5F4' : '#4A3B33'
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: colorScheme === 'dark' ? '#A8A29E' : '#78716C'
+        }}
+      />
+    ),
+    info: (props: ToastShowParams) => (
+      <BaseToast
+        {...props}
+        style={[
+          { borderLeftColor: '#4FC3F7' },
+          colorScheme === 'dark' ? { backgroundColor: '#292524' } : { backgroundColor: '#F8F4EE' }
+        ]}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{
+          fontSize: 15,
+          fontWeight: '400',
+          color: colorScheme === 'dark' ? '#F5F5F4' : '#4A3B33'
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: colorScheme === 'dark' ? '#A8A29E' : '#78716C'
+        }}
+      />
+    ),
+    warn: (props: ToastShowParams) => (
+      <ErrorToast
+        {...props}
+        style={[
+          { borderLeftColor: '#FFA726' },
+          colorScheme === 'dark' ? { backgroundColor: '#292524' } : { backgroundColor: '#F8F4EE' }
+        ]}
+        text1Style={{
+          fontSize: 15,
+          color: colorScheme === 'dark' ? '#F5F5F4' : '#4A3B33'
+        }}
+        text2Style={{
+          fontSize: 14,
+          color: colorScheme === 'dark' ? '#A8A29E' : '#78716C'
+        }}
+      />
+    )
+  };
 
   useEffect(() => {
     if (loaded) {

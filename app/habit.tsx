@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, TouchableOpacity, ScrollView, Platform, useColorScheme } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -9,10 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Cell, Habit } from '@/lib/types';
 import { reloadHabitReminders } from '@/lib/notifications';
 import { HeatMap } from '@/components/HeatMap';
+import { CustomAlert } from '@/components/CustomAlert';
 
 const HabitPage = () => {
+  const colorScheme = useColorScheme();
   const { habit } = useLocalSearchParams();
   const habitData: Habit | null = typeof habit === 'string' ? JSON.parse(habit) : null;
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const cardBackgroundColor = useThemeColor({}, 'card');
@@ -47,16 +50,7 @@ const HabitPage = () => {
         handleDelete();
       }
     } else {
-      // Use Alert for mobile platforms
-      Alert.alert(
-        'Delete Habit',
-        'Are you sure you want to delete this habit?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', onPress: handleDelete, style: 'destructive' },
-        ],
-        { cancelable: true }
-      );
+      setShowDeleteAlert(true);
     }
   };
 
@@ -154,6 +148,28 @@ const HabitPage = () => {
           createdOn={habitData.createdOn} 
         />
       </ScrollView>
+      
+      <CustomAlert
+        visible={showDeleteAlert}
+        title="Delete Habit"
+        message="Are you sure you want to delete this habit?"
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowDeleteAlert(false),
+            style: "cancel"
+          },
+          {
+            text: "Delete",
+            onPress: () => {
+              setShowDeleteAlert(false);
+              handleDelete();
+            },
+            style: "destructive"
+          }
+        ]}
+        onDismiss={() => setShowDeleteAlert(false)}
+      />
     </ThemedView>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View, ActivityIndicator, RefreshControl, ScrollView } from "react-native";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View, ActivityIndicator, RefreshControl, ScrollView, useColorScheme } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -12,11 +12,16 @@ import { Habit } from "@/lib/types";
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import WeekMap from '@/components/WeekMap';
+import { CustomAlert } from '@/components/CustomAlert';
 
 const HomeScreen = () => {
+  const colorScheme = useColorScheme();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showUnmarkAlert, setShowUnmarkAlert] = useState(false);
+  const [habitToUnmark, setHabitToUnmark] = useState<string | null>(null);
+  const [unmarkFunction, setUnmarkFunction] = useState<(() => void) | null>(null);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -121,7 +126,8 @@ const HomeScreen = () => {
             type: 'warn',
             text1: 'Streak Lost',
             text2: toastText,
-            position: 'bottom'
+            position: 'bottom',
+            visibilityTime: 3000,
         });
         // Note: We still allow marking it done for today, which will start a new streak of 1
     } else if (validationResult.freezesConsumed > 0) {
@@ -129,8 +135,9 @@ const HomeScreen = () => {
         Toast.show({
             type: 'info',
             text1: 'Streak Saved!',
-            text2: `${validationResult.freezesConsumed} freeze(s) used for "${currentHabitState.name}" just now.`, 
-            position: 'bottom'
+            text2: `${validationResult.freezesConsumed} freeze(s) used for "${currentHabitState.name}" just now.`,
+            position: 'bottom',
+            visibilityTime: 3000,
         });
     }
     // --- End of Preliminary Check ---
@@ -180,24 +187,20 @@ const HomeScreen = () => {
           type: 'success',
           text1: 'Habit unmarked',
           text2: `"${unmarkedHabit.name}" has been unmarked for today`,
-          position: 'bottom'
+          position: 'bottom',
+          visibilityTime: 3000,
         });
       };
 
-      // Confirmation dialog (remains the same)
+      // Confirmation dialog
       if (Platform.OS === 'web') {
         if (window.confirm(`Do you want to unmark "${currentHabitState.name}" as done for today?`)) {
           unmarkHabit();
         }
       } else {
-        Alert.alert(
-          'Unmark Habit',
-          `Do you want to unmark "${currentHabitState.name}" as done for today?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Unmark', onPress: unmarkHabit }
-          ]
-        );
+        setUnmarkFunction(() => unmarkHabit);  // Store the unmark function
+        setHabitToUnmark(id);
+        setShowUnmarkAlert(true);
       }
       return; // Exit after handling unmark
     }
@@ -223,8 +226,9 @@ const HomeScreen = () => {
       Toast.show({
         type: 'success',
         text1: 'Marked as done!',
-        text2: `Great job completing "${markedHabit.name}" today!`, 
-        position: 'bottom'
+        text2: `Great job completing "${markedHabit.name}" today!`,
+        position: 'bottom',
+        visibilityTime: 2000,
       });
 
       markedHabit.prevBestStreak = markedHabit.bestStreak;
@@ -241,7 +245,8 @@ const HomeScreen = () => {
             type: 'info',
             text1: 'Freeze Earned!',
             text2: `You earned a freeze for "${markedHabit.name}"! Total: ${markedHabit.freezesAvailable}`,
-            position: 'bottom'
+            position: 'bottom',
+            visibilityTime: 3000,
         });
       }
 
@@ -514,6 +519,39 @@ const HomeScreen = () => {
       <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>
         <FontAwesome name="plus" size={24} color={backgroundColor} />
       </TouchableOpacity>
+      <CustomAlert
+        visible={showUnmarkAlert}
+        title="Unmark Habit"
+        message={`Do you want to unmark "${habitToUnmark ? habits.find(h => h.id === habitToUnmark)?.name : ''}" as done for today?`}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => {
+              setShowUnmarkAlert(false);
+              setHabitToUnmark(null);
+              setUnmarkFunction(null);
+            },
+            style: "cancel"
+          },
+          {
+            text: "Unmark",
+            onPress: () => {
+              setShowUnmarkAlert(false);
+              if (unmarkFunction) {
+                unmarkFunction();
+              }
+              setHabitToUnmark(null);
+              setUnmarkFunction(null);
+            },
+            style: "destructive"
+          }
+        ]}
+        onDismiss={() => {
+          setShowUnmarkAlert(false);
+          setHabitToUnmark(null);
+          setUnmarkFunction(null);
+        }}
+      />
     </ThemedView>
   );
 };
