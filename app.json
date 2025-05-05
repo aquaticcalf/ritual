@@ -29,7 +29,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "resizeMode": "native",
+          "resizeMode": "contain",
           "backgroundColor": "#1C1917",
           "androidSplashScreenBackground": "#1C1917"
         }
@@ -43,7 +43,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "7e5fdfc2-0507-4dc0-8820-8b69c49ef95b"
+        "projectId": "4e158916-ea91-4a32-a752-323bda30ae6c"
       }
     },
     "owner": "guru.nikhil.m"

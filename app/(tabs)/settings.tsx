@@ -9,6 +9,7 @@ import { reloadHabitReminders, turnOffAllHabitReminders, turnOnAllHabitReminders
 import { ThemePreference, getThemePreference, saveThemePreference } from '@/lib/themeManager';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { generateTestHabits } from '@/lib/testHabits';
 
 // Helper function to get display name for theme
 const getThemeDisplayName = (themeValue: ThemePreference): string => {
@@ -117,6 +118,66 @@ export default function Settings() {
     }
   };
 
+  const handleCreateTestHabits = async () => {
+    try {
+      const testHabits = generateTestHabits();
+      await AsyncStorage.setItem('habits', JSON.stringify(testHabits));
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Test Habits Created',
+        text2: '5 test habits have been created for testing',
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('Error creating test habits:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to create test habits',
+        position: 'bottom',
+      });
+    }
+  };
+
+  const handleClearStorage = async () => {
+    const confirmClear = () => {
+      AsyncStorage.clear().then(() => {
+        Toast.show({
+          type: 'success',
+          text1: 'Storage Cleared',
+          text2: 'All habits and settings have been cleared',
+          position: 'bottom',
+          visibilityTime: 2000,
+        });
+      }).catch((error) => {
+        console.error('Error clearing storage:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to clear storage',
+          position: 'bottom',
+        });
+      });
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+        confirmClear();
+      }
+    } else {
+      Alert.alert(
+        'Clear All Data',
+        'Are you sure you want to clear all data? This cannot be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Clear', onPress: confirmClear, style: 'destructive' }
+        ]
+      );
+    }
+  };
+
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <ThemedText style={[styles.header, { color: textColor }]}>Settings</ThemedText>
@@ -161,6 +222,27 @@ export default function Settings() {
             Reload Habit Reminders
           </ThemedText>
         </TouchableOpacity>
+
+        <ThemedView style={[styles.section, { marginTop: 30 }]}>
+          <ThemedText style={[styles.sectionTitle, { color: textColor }]}>Testing</ThemedText>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: buttonColor }]} 
+            onPress={handleCreateTestHabits}
+          >
+            <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>
+              Create Test Habits
+            </ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, styles.dangerButton, { marginTop: 10 }]} 
+            onPress={handleClearStorage}
+          >
+            <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>
+              Clear All Data
+            </ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
       </ThemedView>
 
       <Modal
@@ -291,5 +373,16 @@ const styles = StyleSheet.create({
   arrowIcon: {
     fontSize: 18,
     marginLeft: 3,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  dangerButton: {
+    backgroundColor: '#DC2626', // Error red color
   },
 });

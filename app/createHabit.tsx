@@ -210,6 +210,9 @@ const CreateHabitScreen = () => {
       return;
     }
 
+    // Check if frequency has changed
+    const frequencyChanged = JSON.stringify(habitData.frequency) !== JSON.stringify(frequency);
+    
     const updatedHabit = {
       ...habitData,
       name,
@@ -217,6 +220,8 @@ const CreateHabitScreen = () => {
       frequency,
       reminder: isWeb ? false : reminder,  // Force reminders off on web
       reminderTime,
+      // If frequency changed, update the frequencyUpdatedDate
+      ...(frequencyChanged && { frequencyUpdatedDate: new Date().toISOString() })
     };
 
     try {

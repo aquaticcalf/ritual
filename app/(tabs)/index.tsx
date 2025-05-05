@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View, ActivityIndicator } from "react-native";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View, ActivityIndicator, RefreshControl, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
@@ -16,6 +16,7 @@ import WeekMap from '@/components/WeekMap';
 const HomeScreen = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -290,93 +291,99 @@ const HomeScreen = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchAndCheckHabits = async () => {
-      try {
-        const existingHabitsJson = await AsyncStorage.getItem("habits");
-        let habitsData: Habit[] = existingHabitsJson ? JSON.parse(existingHabitsJson) : [];
+  const fetchAndCheckHabits = async () => {
+    try {
+      const existingHabitsJson = await AsyncStorage.getItem("habits");
+      let habitsData: Habit[] = existingHabitsJson ? JSON.parse(existingHabitsJson) : [];
 
-        const today = new Date();
-        let habitsNeedSaving = false;
-        let freezeMessages: { type: 'info' | 'warn', text1: string, text2: string }[] = [];
+      const today = new Date();
+      let habitsNeedSaving = false;
+      let freezeMessages: { type: 'info' | 'warn', text1: string, text2: string }[] = [];
 
-        // Ensure all habits have necessary arrays initialized
-        habitsData = habitsData.map(h => ({
-          ...h,
-          heatMap: h.heatMap || [],
-          freezeMap: h.freezeMap || [],
-          freezesAvailable: h.freezesAvailable === undefined ? 0 : h.freezesAvailable,
-        }));
+      // Ensure all habits have necessary arrays initialized
+      habitsData = habitsData.map(h => ({
+        ...h,
+        heatMap: h.heatMap || [],
+        freezeMap: h.freezeMap || [],
+        freezesAvailable: h.freezesAvailable === undefined ? 0 : h.freezesAvailable,
+      }));
 
-        const processedHabitsPromises = habitsData.map(async (habit) => {
-          const originalHabitState = JSON.stringify(habit); // For comparison later
-          const result = checkAndUpdateStreak(habit, today);
+      const processedHabitsPromises = habitsData.map(async (habit) => {
+        const originalHabitState = JSON.stringify(habit); // For comparison later
+        const result = checkAndUpdateStreak(habit, today);
 
-          // Check if the core habit data changed
-          if (JSON.stringify(result.updatedHabit) !== originalHabitState) {
-             habitsNeedSaving = true;
-          }
-          
-          // Generate Toast Messages based on the check result
-          if (result.freezesConsumed > 0) {
+        // Check if the core habit data changed
+        if (JSON.stringify(result.updatedHabit) !== originalHabitState) {
+           habitsNeedSaving = true;
+        }
+        
+        // Generate Toast Messages based on the check result
+        if (result.freezesConsumed > 0) {
+          freezeMessages.push({
+            type: 'info',
+            text1: 'Streak Saved!',
+            text2: `${result.freezesConsumed} freeze(s) used for "${result.updatedHabit.name}".`
+          });
+        } else if (result.streakBroken) {
+          // Determine if freezes were available but insufficient
+          const originalFreezes = habit.freezesAvailable || 0;
+          const finalFreezes = result.updatedHabit.freezesAvailable || 0;
+          const attemptedToConsume = originalFreezes - finalFreezes;
+
+          if (attemptedToConsume > 0) { // Some freezes were used before breaking
             freezeMessages.push({
-              type: 'info',
-              text1: 'Streak Saved!',
-              text2: `${result.freezesConsumed} freeze(s) used for "${result.updatedHabit.name}".`
+              type: 'warn',
+              text1: 'Streak Lost',
+              text2: `Used ${attemptedToConsume} freeze(s) for "${result.updatedHabit.name}", but more were needed.`
             });
-          } else if (result.streakBroken) {
-            // Determine if freezes were available but insufficient
-            const originalFreezes = habit.freezesAvailable || 0;
-            const finalFreezes = result.updatedHabit.freezesAvailable || 0;
-            const attemptedToConsume = originalFreezes - finalFreezes;
-
-            if (attemptedToConsume > 0) { // Some freezes were used before breaking
-              freezeMessages.push({
+          } else { // No freezes were available at all
+             freezeMessages.push({
                 type: 'warn',
                 text1: 'Streak Lost',
-                text2: `Used ${attemptedToConsume} freeze(s) for "${result.updatedHabit.name}", but more were needed.`
-              });
-            } else { // No freezes were available at all
-               freezeMessages.push({
-                  type: 'warn',
-                  text1: 'Streak Lost',
-                  text2: `Streak reset for "${result.updatedHabit.name}". No freezes were available.`
-              });
-            }
+                text2: `Streak reset for "${result.updatedHabit.name}". No freezes were available.`
+            });
           }
-          
-          // Return the processed habit
-          return result.updatedHabit;
-        });
-        
-        const processedHabits = await Promise.all(processedHabitsPromises);
-
-        if (habitsNeedSaving) {
-          console.log("Habits updated after freeze/streak check, saving...");
-          await AsyncStorage.setItem("habits", JSON.stringify(processedHabits));
         }
+        
+        // Return the processed habit
+        return result.updatedHabit;
+      });
+      
+      const processedHabits = await Promise.all(processedHabitsPromises);
 
-        setHabits(processedHabits);
-        setIsLoading(false);
-
-        // Show accumulated toast messages after setting state
-        const uniqueMessages = new Map<string, { type: 'info' | 'warn', text1: string, text2: string }>();
-        freezeMessages.forEach(msg => uniqueMessages.set(JSON.stringify(msg), msg));
-        uniqueMessages.forEach(msg => {
-            Toast.show({ ...msg, position: 'bottom' });
-        });
-
-      } catch (error) {
-        console.error("Error fetching and checking habits:", error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not load or update habits.',
-          position: 'bottom'
-        });
+      if (habitsNeedSaving) {
+        console.log("Habits updated after freeze/streak check, saving...");
+        await AsyncStorage.setItem("habits", JSON.stringify(processedHabits));
       }
-    };
 
+      setHabits(processedHabits);
+      setIsLoading(false);
+
+      // Show accumulated toast messages after setting state
+      const uniqueMessages = new Map<string, { type: 'info' | 'warn', text1: string, text2: string }>();
+      freezeMessages.forEach(msg => uniqueMessages.set(JSON.stringify(msg), msg));
+      uniqueMessages.forEach(msg => {
+          Toast.show({ ...msg, position: 'bottom' });
+      });
+
+    } catch (error) {
+      console.error("Error fetching and checking habits:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not load or update habits.',
+        position: 'bottom'
+      });
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAndCheckHabits();
+    setRefreshing(false);
+  }, []);
+
+  useEffect(() => {
     fetchAndCheckHabits();
 
   }, []); // Dependency array ensures it runs on mount
@@ -393,98 +400,116 @@ const HomeScreen = () => {
           <ActivityIndicator size="large" color={buttonColor} />
           <ThemedText style={{ marginTop: 10, color: textColor }}>Loading habits...</ThemedText>
         </View>
-      ) : habits.length === 0 ? (
-        <ThemedText style={{ color: textColor, opacity: 0.5 }}>No habits yet, create a habit by clicking + button</ThemedText>
       ) : (
-        <FlatList
-          data={habits}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 5 }}
-          renderItem={({ item }) => {
-            if (!scaleAnimations.current[item.id]) {
-              scaleAnimations.current[item.id] = new Animated.Value(1);
-            }
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[buttonColor]}
+              tintColor={buttonColor}
+              progressBackgroundColor={backgroundColor}
+            />
+          }
+        >
+          {habits.length === 0 ? (
+            <ThemedText style={{ color: textColor, opacity: 0.5, paddingLeft: 5 }}>
+              No habits yet, create a habit by clicking + button
+            </ThemedText>
+          ) : (
+            <FlatList
+              data={habits}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingHorizontal: 5, paddingBottom: 100 }}
+              scrollEnabled={false} // Disable FlatList scrolling since we're using ScrollView
+              renderItem={({ item }) => {
+                if (!scaleAnimations.current[item.id]) {
+                  scaleAnimations.current[item.id] = new Animated.Value(1);
+                }
 
-            const today = new Date();
-            const todayFormatted = formatDate(today);
-            const isCompletedToday = item.lastDone === todayFormatted;
+                const today = new Date();
+                const todayFormatted = formatDate(today);
+                const isCompletedToday = item.lastDone === todayFormatted;
 
-            // --- Updated Logic for isFrozenToday ---
-            let isFrozenToday = false;
-            const lastScheduledDate = findLastScheduledDateBefore(item.frequency, today);
-            if (lastScheduledDate) {
-              const isLastScheduledFrozen = (item.freezeMap || []).some(cell => cell.date === lastScheduledDate);
-              // Frozen style applies if last scheduled day is frozen AND today isn't completed
-              isFrozenToday = isLastScheduledFrozen && !isCompletedToday;
-            }
-            // --- End of Updated Logic ---
+                // --- Updated Logic for isFrozenToday ---
+                let isFrozenToday = false;
+                const lastScheduledDate = findLastScheduledDateBefore(item.frequency, today);
+                if (lastScheduledDate) {
+                  const isLastScheduledFrozen = (item.freezeMap || []).some(cell => cell.date === lastScheduledDate);
+                  // Frozen style applies if last scheduled day is frozen AND today isn't completed
+                  isFrozenToday = isLastScheduledFrozen && !isCompletedToday;
+                }
+                // --- End of Updated Logic ---
 
-            return (
-              <Animated.View style={{
-                transform: [{ scale: scaleAnimations.current[item.id] }],
-                marginBottom: 10,
-                borderRadius: 10,
-                overflow: 'visible',
-                marginHorizontal: 3,
-              }}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.habitItem,
-                    { backgroundColor: habitItemBackgroundColor },
-                    // Apply frozen style first if applicable
-                    isFrozenToday ? styles.frozenHabit : {},
-                    // Apply completed style (potentially overrides frozen bg, but keeps border)
-                    isCompletedToday ? styles.completedHabit : {},
-                    // Apply opacity: highest priority is completion, then frozen, then press
-                    isCompletedToday ? { opacity: 0.6 } :
-                    (isFrozenToday ? { opacity: 0.8 } : 
-                    (pressed ? { opacity: 0.7 } : {})),
-                  ]}
-                  onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
-                  onLongPress={() => handleMarkAsDone({ id: item.id })}
-                  delayLongPress={500}
-                >
-                  <View style={{ flex: 1 }}>
-                    <View style={styles.habitDetailsContainer}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                        <ThemedText style={[{ color: iconColor }]}>
-                          {item.icon}
-                        </ThemedText>
-                        <ThemedText style={[
-                          { color: textColor, fontSize: 18 },
-                          isCompletedToday ? styles.completedText : {}
-                        ]}>
-                          {item.name}
-                        </ThemedText>
-                        <ThemedText style={[{ color: secondaryTextColor, fontSize: 12 }]}>
-                          {item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}
-                        </ThemedText>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                          <ThemedText style={[styles.streak, { color: textColor }]}>
-                            {item.currentStreak} 🔥
-                          </ThemedText>
-                          {(item.freezesAvailable || 0) > 0 && (
-                            <ThemedText style={[
-                              styles.streak,
-                              {
-                                fontSize: 16,
-                                color: '#4fc3f7', // Light blue for freeze icon
-                                opacity: (isCompletedToday || isFrozenToday) ? 0.7 : 1 // Adjust opacity if frozen
-                              }
-                            ]}>
-                              ❄️{item.freezesAvailable || 0}
+                return (
+                  <Animated.View style={{
+                    transform: [{ scale: scaleAnimations.current[item.id] }],
+                    marginBottom: 10,
+                    borderRadius: 10,
+                    overflow: 'visible',
+                    marginHorizontal: 3,
+                  }}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.habitItem,
+                        { backgroundColor: habitItemBackgroundColor },
+                        // Apply frozen style first if applicable
+                        isFrozenToday ? styles.frozenHabit : {},
+                        // Apply completed style (potentially overrides frozen bg, but keeps border)
+                        isCompletedToday ? styles.completedHabit : {},
+                        // Apply opacity: highest priority is completion, then frozen, then press
+                        isCompletedToday ? { opacity: 0.6 } :
+                        (isFrozenToday ? { opacity: 0.8 } : 
+                        (pressed ? { opacity: 0.7 } : {})),
+                      ]}
+                      onPress={() => router.push({ pathname: "/habit", params: { habit: JSON.stringify(item) } })}
+                      onLongPress={() => handleMarkAsDone({ id: item.id })}
+                      delayLongPress={500}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.habitDetailsContainer}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                            <ThemedText style={[{ color: iconColor }]}>
+                              {item.icon}
                             </ThemedText>
-                          )}
+                            <ThemedText style={[
+                              { color: textColor, fontSize: 18 },
+                              isCompletedToday ? styles.completedText : {}
+                            ]}>
+                              {item.name}
+                            </ThemedText>
+                            <ThemedText style={[{ color: secondaryTextColor, fontSize: 12 }]}>
+                              {item.frequency.length === 7 ? "Every day" : `${item.frequency.length} days a week`}
+                            </ThemedText>
+                          </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                              <ThemedText style={[styles.streak, { color: textColor }]}>
+                                {item.currentStreak} 🔥
+                              </ThemedText>
+                              {(item.freezesAvailable || 0) > 0 && (
+                                <ThemedText style={[
+                                  styles.streak,
+                                  {
+                                    fontSize: 16,
+                                    color: '#4fc3f7', // Light blue for freeze icon
+                                    opacity: (isCompletedToday || isFrozenToday) ? 0.7 : 1 // Adjust opacity if frozen
+                                  }
+                                ]}>
+                                  ❄️{item.freezesAvailable || 0}
+                                </ThemedText>
+                              )}
+                          </View>
+                        </View>
+                        <WeekMap heatMap={item.heatMap || []} /> 
                       </View>
-                    </View>
-                    <WeekMap heatMap={item.heatMap || []} /> 
-                  </View>
-                </Pressable>
-              </Animated.View>
-            );
-          }}
-        />
+                    </Pressable>
+                  </Animated.View>
+                );
+              }}
+            />
+          )}
+        </ScrollView>
       )}
       <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>
         <FontAwesome name="plus" size={24} color={backgroundColor} />

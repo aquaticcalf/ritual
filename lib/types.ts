@@ -19,4 +19,5 @@ export type Habit = {
     freezeMap: Cell[]; // Added: Stores dates where a freeze was used
     freezesAvailable: number;
     lastCheckedDate?: string; // 'dd/mm/yyyy', track last freeze check
+    frequencyUpdatedDate?: string; // ISO string, added to track when frequency was last changed
 };

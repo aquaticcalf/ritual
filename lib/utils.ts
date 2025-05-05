@@ -84,7 +84,6 @@ function findMissedDatesInRange(frequency: string[], startDate: Date, endDate: D
     return missedDates;
 }
 
-
 // Calculates the list of scheduled days missed between the last completion/freeze and yesterday
 function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates: string[] } {
     const todayDateOnly = new Date(today);
@@ -113,6 +112,12 @@ function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates:
         }
     }
 
+    // Convert frequency update date to a Date object if it exists
+    const frequencyUpdateDate = habit.frequencyUpdatedDate ? new Date(habit.frequencyUpdatedDate) : null;
+    if (frequencyUpdateDate) {
+        frequencyUpdateDate.setHours(0, 0, 0, 0);
+    }
+
     let startDate: Date;
     if (lastCompletionOrFreezeDateStr) {
         const parts = lastCompletionOrFreezeDateStr.split('/');
@@ -131,6 +136,11 @@ function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates:
     } else {
         // Cannot determine start date
         return { missedDates: [] };
+    }
+
+    // If frequency was updated, use that as the minimum start date
+    if (frequencyUpdateDate && frequencyUpdateDate > startDate) {
+        startDate = new Date(frequencyUpdateDate);
     }
 
     // Check up to *yesterday*
