@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  View,
 } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -20,6 +21,7 @@ import { Cell, Habit } from "@/lib/types";
 import Toast from 'react-native-toast-message'; // Make sure this import is present
 import { generateHistoricalHeatMap } from "@/lib/utils";
 import { AdvancedOptions } from "@/components/AdvancedOptions";
+import { LogoIcon } from "@/components/ui/LogoIcon";
 
 const CreateHabitScreen = () => {
   const { habit } = useLocalSearchParams();
@@ -122,7 +124,7 @@ const CreateHabitScreen = () => {
       return;
     }
 
-    const iconToUse = !icon || icon === "" ? "local-fire-department" : icon;
+    const iconToUse = !icon || icon === "" ? "ritual-logo" : icon;
 
     // Generate historical data if initialStreak > 0
     const historicalData = initialStreak > 0 
@@ -148,7 +150,7 @@ const CreateHabitScreen = () => {
 
     // Update the state for UI consistency (not needed for the habit object)
     if (!icon || icon === "") {
-      setIcon("local-fire-department");
+      setIcon("ritual-logo");
     }
 
     try {
@@ -295,7 +297,7 @@ const CreateHabitScreen = () => {
               <MaterialIcons name={icon as any} size={24} color={backgroundColor} />
             ) : (
               <MaterialIcons name="add" size={24} color={backgroundColor} />
-            )}
+                          )}
           </TouchableOpacity>
         </ThemedView>
         <ThemedText style={[styles.label, { color: textColor }]}>Frequency</ThemedText>

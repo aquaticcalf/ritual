@@ -11,6 +11,7 @@ import { Cell, Habit } from '@/lib/types';
 import { reloadHabitReminders } from '@/lib/notifications';
 import { HeatMap } from '@/components/HeatMap';
 import { CustomAlert } from '@/components/CustomAlert';
+import { LogoIcon } from '@/components/ui/LogoIcon';
 
 const HabitPage = () => {
   const colorScheme = useColorScheme();
@@ -60,7 +61,11 @@ const HabitPage = () => {
       navigation.setOptions({
         headerTitle: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <MaterialIcons name={habitData.icon as any} size={24} color={textColor} style={{ marginRight: 8 }} />
+            {(!habitData.icon || habitData.icon === "ritual-logo") ? (
+              <LogoIcon width={24} height={24} color={textColor} style={{ marginRight: 8 }} />
+            ) : (
+              <MaterialIcons name={habitData.icon as any} size={24} color={textColor} style={{ marginRight: 8 }} />
+            )}
             <ThemedText style={{ fontSize: 17, fontWeight: '600', color: textColor }}>{habitData.name}</ThemedText>
           </View>
         )
@@ -83,8 +88,12 @@ const HabitPage = () => {
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Current Streak</ThemedText>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialIcons name="local-fire-department" size={24} color={secondaryTextColor} />
-              <ThemedText style={[styles.statValue, { color: secondaryTextColor, marginLeft: 4 }]}>{habitData.currentStreak}</ThemedText>
+              {(!habitData?.icon || habitData?.icon === "ritual-logo") ? (
+                <LogoIcon width={24} height={24} color={secondaryTextColor} style={{ marginRight: 4 }} />
+              ) : (
+                <MaterialIcons name="local-fire-department" size={24} color={secondaryTextColor} />
+              )}
+              <ThemedText style={[styles.statValue, { color: secondaryTextColor, marginLeft: 4 }]}>{habitData?.currentStreak}</ThemedText>
             </View>
           </ThemedView>
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>

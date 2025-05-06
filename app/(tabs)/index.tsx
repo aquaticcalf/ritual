@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import WeekMap from '@/components/WeekMap';
 import { CustomAlert } from '@/components/CustomAlert';
 import { Tooltip } from '@/components/Tooltip';
+import { LogoIcon } from '@/components/ui/LogoIcon';
 
 const HomeScreen = () => {
   const colorScheme = useColorScheme();
@@ -407,7 +408,10 @@ const HomeScreen = () => {
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <View style={styles.headerContainer}>
-        <ThemedText style={[styles.header, { color: textColor }]}>Ritual</ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <LogoIcon style={{ marginRight: 8 }} />
+          <ThemedText style={[styles.header, { color: textColor }]}>Ritual</ThemedText>
+        </View>
         <TouchableOpacity
           ref={infoButtonRef}
           style={{ marginLeft: 10, padding: 5 }}
@@ -522,12 +526,21 @@ const HomeScreen = () => {
                       <View style={{ flex: 1 }}>
                         <View style={styles.habitDetailsContainer}>
                           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                            <MaterialIcons 
-                              name={item.icon as any} 
-                              size={24} 
-                              color={iconColor}
-                              style={isCompletedToday ? { opacity: 0.6 } : undefined}
-                            />
+                            {(!item.icon || item.icon === "ritual-logo") ? (
+                              <LogoIcon 
+                                width={24} 
+                                height={24} 
+                                color={iconColor}
+                                style={isCompletedToday ? { opacity: 0.6 } : undefined}
+                              />
+                            ) : (
+                              <MaterialIcons 
+                                name={item.icon as any} 
+                                size={24} 
+                                color={iconColor}
+                                style={isCompletedToday ? { opacity: 0.6 } : undefined}
+                              />
+                            )}
                             <ThemedText style={[
                               { color: textColor, fontSize: 18 },
                               isCompletedToday ? styles.completedText : {}
