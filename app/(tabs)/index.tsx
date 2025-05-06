@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { FlatList, TouchableOpacity, StyleSheet, Animated, Pressable, Platform, Alert, View, ActivityIndicator, RefreshControl, ScrollView, useColorScheme } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import WeekMap from '@/components/WeekMap';
 import { CustomAlert } from '@/components/CustomAlert';
+import { Tooltip } from '@/components/Tooltip';
 
 const HomeScreen = () => {
   const colorScheme = useColorScheme();
@@ -22,6 +23,8 @@ const HomeScreen = () => {
   const [showUnmarkAlert, setShowUnmarkAlert] = useState(false);
   const [habitToUnmark, setHabitToUnmark] = useState<string | null>(null);
   const [unmarkFunction, setUnmarkFunction] = useState<(() => void) | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -32,18 +35,26 @@ const HomeScreen = () => {
   const frozenHabitBackgroundColor = useThemeColor({}, 'frozenBackground'); // Ensure this exists in themes
   const frozenHabitBorderColor = useThemeColor({}, 'frozenBorder');     // Ensure this exists in themes
   const scaleAnimations = useRef<{[key: string]: Animated.Value}>({});
+  const infoButtonRef = useRef<View>(null);
 
   // Define styles inside the component to access theme colors
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      padding: 20,
+      paddingHorizontal: 15,
+      paddingTop: 15,
+    },
+    headerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      paddingTop: 20,
+      paddingBottom: 10,
     },
     header: {
       fontSize: 24,
       fontWeight: "bold",
-      marginBottom: 20,
-      marginTop: 20,
     },
     habitItem: {
       alignItems: "stretch",
@@ -395,7 +406,39 @@ const HomeScreen = () => {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <ThemedText style={[styles.header, { color: textColor }]}>Ritual</ThemedText>
+      <View style={styles.headerContainer}>
+        <ThemedText style={[styles.header, { color: textColor }]}>Ritual</ThemedText>
+        <TouchableOpacity
+          ref={infoButtonRef}
+          style={{ marginLeft: 10, padding: 5 }}
+          onPress={() => {
+            infoButtonRef.current?.measure(
+              (
+              x: number,
+              y: number,
+              width: number,
+              height: number,
+              pageX: number,
+              pageY: number
+              ) => {
+              setTooltipPosition({ x: pageX + width / 2, y: pageY });
+              setTooltipVisible(true);
+              }
+            );
+          }}
+        >
+          <MaterialIcons name="info-outline" size={20} color={secondaryTextColor} />
+        </TouchableOpacity>
+      </View>
+      
+      <Tooltip
+        isVisible={tooltipVisible}
+        onClose={() => setTooltipVisible(false)}
+        text="Press and hold any habit to mark or unmark it as done for today"
+        x={tooltipPosition.x}
+        y={tooltipPosition.y}
+      />
+      
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={buttonColor} />
@@ -422,7 +465,7 @@ const HomeScreen = () => {
             <FlatList
               data={habits}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingHorizontal: 5, paddingBottom: 100 }}
+              contentContainerStyle={{ paddingHorizontal: 5, paddingBottom: 80 }}
               scrollEnabled={false} // Disable FlatList scrolling since we're using ScrollView
               renderItem={({ item }) => {
                 if (!scaleAnimations.current[item.id]) {
@@ -521,7 +564,7 @@ const HomeScreen = () => {
         </ScrollView>
       )}
       <TouchableOpacity style={[styles.addButton, { backgroundColor: buttonColor }]} onPress={() => router.push("/createHabit") }>
-        <FontAwesome name="plus" size={24} color={backgroundColor} />
+        <MaterialIcons name="add" size={24} color={backgroundColor} />
       </TouchableOpacity>
       <CustomAlert
         visible={showUnmarkAlert}
