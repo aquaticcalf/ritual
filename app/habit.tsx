@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, Platform, useColorScheme } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, Platform, useColorScheme, View } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Cell, Habit } from '@/lib/types';
 import { reloadHabitReminders } from '@/lib/notifications';
 import { HeatMap } from '@/components/HeatMap';
@@ -56,9 +57,16 @@ const HabitPage = () => {
 
   useEffect(() => {
     if (habitData) {
-      navigation.setOptions({ title: `${habitData.icon} ${habitData.name}` });
+      navigation.setOptions({
+        headerTitle: () => (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialIcons name={habitData.icon as any} size={24} color={textColor} style={{ marginRight: 8 }} />
+            <ThemedText style={{ fontSize: 17, fontWeight: '600', color: textColor }}>{habitData.name}</ThemedText>
+          </View>
+        )
+      });
     }
-  }, [habitData]);
+  }, [habitData, textColor]);
 
   if (!habitData) {
     return (
@@ -74,15 +82,24 @@ const HabitPage = () => {
         <ThemedView style={styles.statsContainer}>
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Current Streak</ThemedText>
-            <ThemedText style={[styles.statValue, { color: secondaryTextColor }]}>{habitData.currentStreak}🔥</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialIcons name="local-fire-department" size={24} color={secondaryTextColor} />
+              <ThemedText style={[styles.statValue, { color: secondaryTextColor, marginLeft: 4 }]}>{habitData.currentStreak}</ThemedText>
+            </View>
           </ThemedView>
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Best Streak</ThemedText>
-            <ThemedText style={[styles.statValue, { color: secondaryTextColor }]}>{habitData.bestStreak}🔥</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialIcons name="local-fire-department" size={24} color={secondaryTextColor} />
+              <ThemedText style={[styles.statValue, { color: secondaryTextColor, marginLeft: 4 }]}>{habitData.bestStreak}</ThemedText>
+            </View>
           </ThemedView>
           <ThemedView style={[styles.statBox, { backgroundColor: cardBackgroundColor }]}>
             <ThemedText style={[styles.statTitle, { color: textColor }]}>Freezes</ThemedText>
-            <ThemedText style={[styles.statValue, { color: '#4fc3f7' }]}>❄️{habitData.freezesAvailable || 0}</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialIcons name="ac-unit" size={24} color="#4fc3f7" />
+              <ThemedText style={[styles.statValue, { color: '#4fc3f7', marginLeft: 4 }]}>{habitData.freezesAvailable || 0}</ThemedText>
+            </View>
           </ThemedView>
         </ThemedView>
 

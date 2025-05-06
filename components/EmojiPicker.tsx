@@ -3,33 +3,34 @@ import { FlatList, Modal, StyleSheet, TouchableOpacity, View } from 'react-nativ
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { MaterialIcons } from '@expo/vector-icons';
 
 type EmojiPickerProps = {
   visible: boolean;
   onClose: () => void;
-  onSelect: (emoji: string) => void;
+  onSelect: (icon: string) => void;
 };
 
-type EmojiCategories = {
+type IconCategories = {
   [key: string]: string[];
 };
 
-const emojiCategories: EmojiCategories = {
+const iconCategories: IconCategories = {
   "Habits & Activities": [
-    "💪", "🏃", "📚", "🧘", "💧", "🍎", "🎨", "🎵", "🎮", "✍️", "🎯", "⚽️",
-    "🏋️", "🚴", "🧠", "📝", "🎸", "🎹", "📸"
+    "fitness-center", "directions-run", "menu-book", "self-improvement", "water-drop", "restaurant", "palette", "music-note", "sports-esports", "edit", "track-changes", "sports-soccer",
+    "sports-handball", "pedal-bike", "psychology", "create", "piano", "music-video", "camera-alt"
   ],
   "Health & Wellness": [
-    "🧘‍♀️", "🏃‍♀️", "💊", "🥗", "🥑", "🥦", "💆‍♀️", "🧘", "🚰", "😴",
-    "🌿", "🍵", "🧪", "🥩", "⚕️", "🧼", "🦷", "🧘‍♂️", "🏊‍♂️", "🧭"
+    "spa", "directions-walk", "medication", "restaurant-menu", "eco", "grass", "face", "pool", "water", "bedtime",
+    "park", "coffee", "science", "food-bank", "medical-services", "clean-hands", "dentistry", "self-improvement", "pool", "explore"
   ],
   "Productivity": [
-    "💻", "📱", "✉️", "📅", "⏰", "📊", "✅", "📈", "💡", "📌",
-    "📍", "🎯", "📋", "📎", "🔍", "📲", "💼", "📁", "📝", "✏️"
+    "laptop", "smartphone", "email", "calendar-today", "alarm", "insert-chart", "check-circle", "trending-up", "lightbulb", "push-pin",
+    "place", "track-changes", "assignment", "attachment", "search", "mobile-screen-share", "work", "folder", "edit-note", "edit"
   ],
   "Lifestyle": [
-    "☀️", "🌙", "🌱", "🐶", "🐱", "☕", "🏠", "🚗", "💰", "👥",
-    "🎉", "🎁", "🛋️", "🛀", "🛌", "🎭", "🎬", "📺", "🎧", "📱"
+    "wb-sunny", "nightlight", "grass", "pets", "pets", "coffee", "home", "directions-car", "account-balance-wallet", "groups",
+    "celebration", "card-giftcard", "chair", "bathtub", "bed", "theater-comedy", "movie", "tv", "headphones", "phone-android"
   ]
 };
 
@@ -38,7 +39,7 @@ export function EmojiPicker({ visible, onClose, onSelect }: EmojiPickerProps) {
   const textColor = useThemeColor({}, "text");
   const dayColor = useThemeColor({}, "icon");
   const tintColor = useThemeColor({}, "tint");
-  const [selectedCategory, setSelectedCategory] = useState<string>(Object.keys(emojiCategories)[0]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(Object.keys(iconCategories)[0]);
 
   const renderCategory = ({ item }: { item: string }) => (
     <TouchableOpacity
@@ -63,15 +64,15 @@ export function EmojiPicker({ visible, onClose, onSelect }: EmojiPickerProps) {
     </TouchableOpacity>
   );
 
-  const renderEmoji = ({ item }: { item: string }) => (
+  const renderIcon = ({ item }: { item: string }) => (
     <TouchableOpacity
-      style={styles.emojiButton}
+      style={styles.iconButton}
       onPress={() => {
         onSelect(item);
         onClose();
       }}
     >
-      <ThemedText style={styles.emojiText}>{item}</ThemedText>
+      <MaterialIcons name={item as any} size={28} color={textColor} />
     </TouchableOpacity>
   );
 
@@ -80,7 +81,7 @@ export function EmojiPicker({ visible, onClose, onSelect }: EmojiPickerProps) {
       <ThemedView style={styles.emojiPickerContainer}>
         <ThemedView style={[styles.emojiPickerWrapper, { backgroundColor: inputBackgroundColor }]}>
           <FlatList
-            data={Object.keys(emojiCategories)}
+            data={Object.keys(iconCategories)}
             renderItem={renderCategory}
             keyExtractor={(item) => item}
             horizontal={true}
@@ -88,12 +89,12 @@ export function EmojiPicker({ visible, onClose, onSelect }: EmojiPickerProps) {
             style={styles.categoryList}
           />
           <FlatList
-            data={emojiCategories[selectedCategory]}
-            renderItem={renderEmoji}
+            data={iconCategories[selectedCategory]}
+            renderItem={renderIcon}
             keyExtractor={(item) => item}
             numColumns={5}
-            style={styles.emojiList}
-            contentContainerStyle={styles.emojiListContent}
+            style={styles.iconList}
+            contentContainerStyle={styles.iconListContent}
           />
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: dayColor === textColor ? "#f0f0f0" : inputBackgroundColor }]}
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
   },
   categoryTab: {
     paddingHorizontal: 12,
-    paddingVertical: 6, // Reduced from 8
+    paddingVertical: 6,
     marginRight: 10,
     borderRadius: 20,
     borderWidth: 1,
@@ -141,30 +142,24 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    lineHeight: 16, // Added to control text height
-    textAlignVertical: 'center', // Added for better vertical alignment
+    lineHeight: 16,
+    textAlignVertical: 'center',
   },
   selectedCategoryText: {
     fontWeight: 'bold',
   },
-  emojiList: {
+  iconList: {
     flexGrow: 1,
   },
-  emojiListContent: {
-    paddingVertical: 15, // Increased padding to give more space
+  iconListContent: {
+    paddingVertical: 15,
   },
-  emojiButton: {
+  iconButton: {
     width: '20%',
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 0, // Remove padding to prevent emoji clipping
-  },
-  emojiText: {
-    fontSize: 28,
-    lineHeight: 32, // Add lineHeight to ensure proper vertical spacing
-    textAlign: 'center',
-    textAlignVertical: 'center',
+    padding: 0,
   },
   closeButton: {
     padding: 12,

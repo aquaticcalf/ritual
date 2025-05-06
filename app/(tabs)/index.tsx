@@ -522,9 +522,12 @@ const HomeScreen = () => {
                       <View style={{ flex: 1 }}>
                         <View style={styles.habitDetailsContainer}>
                           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                            <ThemedText style={[{ color: iconColor }]}>
-                              {item.icon}
-                            </ThemedText>
+                            <MaterialIcons 
+                              name={item.icon as any} 
+                              size={24} 
+                              color={iconColor}
+                              style={isCompletedToday ? { opacity: 0.6 } : undefined}
+                            />
                             <ThemedText style={[
                               { color: textColor, fontSize: 18 },
                               isCompletedToday ? styles.completedText : {}
@@ -536,9 +539,12 @@ const HomeScreen = () => {
                             </ThemedText>
                           </View>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                              <ThemedText style={[styles.streak, { color: textColor }]}>
-                                {item.currentStreak} 🔥
-                              </ThemedText>
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialIcons name="local-fire-department" size={24} color={textColor} />
+                                <ThemedText style={[styles.streak, { color: textColor, marginLeft: 4 }]}>
+                                  {item.currentStreak}
+                                </ThemedText>
+                              </View>
                               {(item.freezesAvailable || 0) > 0 && (
                                 <ThemedText style={[
                                   styles.streak,
@@ -548,7 +554,7 @@ const HomeScreen = () => {
                                     opacity: (isCompletedToday || isFrozenToday) ? 0.7 : 1 // Adjust opacity if frozen
                                   }
                                 ]}>
-                                  ❄️{item.freezesAvailable || 0}
+                                  {item.freezesAvailable || 0}❄️
                                 </ThemedText>
                               )}
                           </View>

@@ -122,7 +122,7 @@ const CreateHabitScreen = () => {
       return;
     }
 
-    const iconToUse = !icon || icon === "" ? "🔥" : icon;
+    const iconToUse = !icon || icon === "" ? "local-fire-department" : icon;
 
     // Generate historical data if initialStreak > 0
     const historicalData = initialStreak > 0 
@@ -148,7 +148,7 @@ const CreateHabitScreen = () => {
 
     // Update the state for UI consistency (not needed for the habit object)
     if (!icon || icon === "") {
-      setIcon("🔥");
+      setIcon("local-fire-department");
     }
 
     try {
@@ -292,9 +292,9 @@ const CreateHabitScreen = () => {
             onPress={() => setIsEmojiPickerVisible(true)}
           >
             {icon ? (
-              <ThemedText style={{ fontSize: 16 }}>{icon}</ThemedText>
+              <MaterialIcons name={icon as any} size={24} color={backgroundColor} />
             ) : (
-              <MaterialIcons name="add" size={16} />
+              <MaterialIcons name="add" size={24} color={backgroundColor} />
             )}
           </TouchableOpacity>
         </ThemedView>
@@ -380,7 +380,7 @@ const CreateHabitScreen = () => {
       <EmojiPicker
         visible={isEmojiPickerVisible}
         onClose={() => setIsEmojiPickerVisible(false)}
-        onSelect={(emoji) => setIcon(emoji)}
+        onSelect={(selectedIcon) => setIcon(selectedIcon)}
       />
     </ThemedView>
   );
