@@ -2,7 +2,7 @@ import React from "react";
 import { TextInput, TouchableOpacity, StyleSheet, View } from "react-native";
 import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 
 interface AdvancedOptionsProps {
   showAdvancedOptions: boolean;
@@ -36,9 +36,9 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
         onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
       >
         <ThemedText style={[styles.label, { color: textColor }]}>Advanced Options</ThemedText>
-        <FontAwesome 
-          name={showAdvancedOptions ? "chevron-up" : "chevron-down"} 
-          size={16} 
+        <MaterialIcons 
+          name={showAdvancedOptions ? "expand-less" : "expand-more"} 
+          size={24} 
           color={textColor} 
         />
       </TouchableOpacity>
@@ -60,7 +60,7 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
               onPress={() => initialStreak > 0 && setInitialStreak(initialStreak - 1)}
               disabled={initialStreak <= 0}
             >
-              <ThemedText style={{ color: backgroundColor, fontSize: 16 }}>-</ThemedText>
+              <MaterialIcons name="remove" size={20} color={backgroundColor} />
             </TouchableOpacity>
             
             <TextInput
@@ -89,7 +89,7 @@ export const AdvancedOptions: React.FC<AdvancedOptionsProps> = ({
               onPress={() => initialStreak < MAX_STREAK && setInitialStreak(initialStreak + 1)}
               disabled={initialStreak >= MAX_STREAK}
             >
-              <ThemedText style={{ color: backgroundColor, fontSize: 16 }}>+</ThemedText>
+              <MaterialIcons name="add" size={20} color={backgroundColor} />
             </TouchableOpacity>
           </ThemedView>
         </ThemedView>

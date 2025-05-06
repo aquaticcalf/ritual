@@ -10,7 +10,7 @@ import {
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { EmojiPicker } from "@/components/EmojiPicker";
 import TimePicker from "@/components/TimePicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -294,7 +294,7 @@ const CreateHabitScreen = () => {
             {icon ? (
               <ThemedText style={{ fontSize: 16 }}>{icon}</ThemedText>
             ) : (
-              <FontAwesome name="plus" size={16} />
+              <MaterialIcons name="add" size={16} />
             )}
           </TouchableOpacity>
         </ThemedView>
