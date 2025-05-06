@@ -151,17 +151,20 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   emojiListContent: {
-    paddingVertical: 10,
+    paddingVertical: 15, // Increased padding to give more space
   },
   emojiButton: {
     width: '20%',
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
+    padding: 0, // Remove padding to prevent emoji clipping
   },
   emojiText: {
     fontSize: 28,
+    lineHeight: 32, // Add lineHeight to ensure proper vertical spacing
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
   closeButton: {
     padding: 12,
