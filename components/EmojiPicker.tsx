@@ -1,5 +1,5 @@
-import React from 'react';
-import { FlatList, Modal, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -10,15 +10,58 @@ type EmojiPickerProps = {
   onSelect: (emoji: string) => void;
 };
 
-const emojis = [
-  "💪", "🏃", "📚", "🧘", "💧", "🍎", "🎨", "🎵",
-  "☀️", "🌙", "🌱", "🐶", "🐱", "☕", "💻", "💡"
-];
+type EmojiCategories = {
+  [key: string]: string[];
+};
+
+const emojiCategories: EmojiCategories = {
+  "Habits & Activities": [
+    "💪", "🏃", "📚", "🧘", "💧", "🍎", "🎨", "🎵", "🎮", "✍️", "🎯", "⚽️",
+    "🏋️", "🚴", "🧠", "📝", "🎸", "🎹", "📸"
+  ],
+  "Health & Wellness": [
+    "🧘‍♀️", "🏃‍♀️", "💊", "🥗", "🥑", "🥦", "💆‍♀️", "🧘", "🚰", "😴",
+    "🌿", "🍵", "🧪", "🥩", "⚕️", "🧼", "🦷", "🧘‍♂️", "🏊‍♂️", "🧭"
+  ],
+  "Productivity": [
+    "💻", "📱", "✉️", "📅", "⏰", "📊", "✅", "📈", "💡", "📌",
+    "📍", "🎯", "📋", "📎", "🔍", "📲", "💼", "📁", "📝", "✏️"
+  ],
+  "Lifestyle": [
+    "☀️", "🌙", "🌱", "🐶", "🐱", "☕", "🏠", "🚗", "💰", "👥",
+    "🎉", "🎁", "🛋️", "🛀", "🛌", "🎭", "🎬", "📺", "🎧", "📱"
+  ]
+};
 
 export function EmojiPicker({ visible, onClose, onSelect }: EmojiPickerProps) {
   const inputBackgroundColor = useThemeColor({}, "card");
   const textColor = useThemeColor({}, "text");
   const dayColor = useThemeColor({}, "icon");
+  const tintColor = useThemeColor({}, "tint");
+  const [selectedCategory, setSelectedCategory] = useState<string>(Object.keys(emojiCategories)[0]);
+
+  const renderCategory = ({ item }: { item: string }) => (
+    <TouchableOpacity
+      style={[
+        styles.categoryTab,
+        selectedCategory === item && [
+          styles.selectedCategory,
+          { backgroundColor: tintColor + '20', borderColor: tintColor }
+        ],
+        selectedCategory !== item && { borderColor: textColor }
+      ]}
+      onPress={() => setSelectedCategory(item)}
+    >
+      <ThemedText 
+        style={[
+          styles.categoryText, 
+          selectedCategory === item && { color: tintColor }
+        ]}
+      >
+        {item}
+      </ThemedText>
+    </TouchableOpacity>
+  );
 
   const renderEmoji = ({ item }: { item: string }) => (
     <TouchableOpacity
@@ -37,10 +80,18 @@ export function EmojiPicker({ visible, onClose, onSelect }: EmojiPickerProps) {
       <ThemedView style={styles.emojiPickerContainer}>
         <ThemedView style={[styles.emojiPickerWrapper, { backgroundColor: inputBackgroundColor }]}>
           <FlatList
-            data={emojis}
+            data={Object.keys(emojiCategories)}
+            renderItem={renderCategory}
+            keyExtractor={(item) => item}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryList}
+          />
+          <FlatList
+            data={emojiCategories[selectedCategory]}
             renderItem={renderEmoji}
             keyExtractor={(item) => item}
-            numColumns={4}
+            numColumns={5}
             style={styles.emojiList}
             contentContainerStyle={styles.emojiListContent}
           />
@@ -65,34 +116,58 @@ const styles = StyleSheet.create({
   },
   emojiPickerWrapper: {
     width: "90%",
-    height: 400,
-    borderRadius: 10,
+    height: 450,
+    borderRadius: 15,
     overflow: "hidden",
     padding: 16,
     justifyContent: 'space-between',
+  },
+  categoryList: {
+    maxHeight: 50,
+    marginBottom: 10,
+  },
+  categoryTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6, // Reduced from 8
+    marginRight: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedCategory: {
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    borderColor: '#007AFF',
+  },
+  categoryText: {
+    fontSize: 14,
+    lineHeight: 16, // Added to control text height
+    textAlignVertical: 'center', // Added for better vertical alignment
+  },
+  selectedCategoryText: {
+    fontWeight: 'bold',
   },
   emojiList: {
     flexGrow: 1,
   },
   emojiListContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingVertical: 10,
   },
   emojiButton: {
-    width: 60,
-    height: 60,
+    width: '20%',
+    aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 8,
-    padding: 8, // Added padding to ensure emojis are fully visible
+    padding: 8,
   },
   emojiText: {
-    fontSize: 24,
+    fontSize: 28,
   },
   closeButton: {
     padding: 12,
     alignItems: 'center',
     borderRadius: 8,
+    marginTop: 10,
   },
   closeButtonText: {
     fontSize: 16,
