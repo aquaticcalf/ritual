@@ -111,9 +111,18 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+      <Stack screenOptions={{
+        headerStyle: {
+          backgroundColor: backgroundColor
+        },
+        headerTintColor: colorScheme === 'dark' ? '#F5F5F4' : '#4A3B33',
+        headerTitleStyle: {
+          fontWeight: '600'
+        },
+      }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="createHabit" options={{ title: 'Create Habit' }} />
+        <Stack.Screen name="habit" options={{ title: 'Habit Details' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={colorScheme === 'light' ? 'dark' : 'light'} backgroundColor={backgroundColor} />
