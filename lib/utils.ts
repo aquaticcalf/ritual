@@ -59,33 +59,11 @@ export const generateHistoricalHeatMap = (streak: number, frequency: string[]): 
     };
 }
 
-// Helper to find all scheduled, missed dates within a specific date range
-function findMissedDatesInRange(frequency: string[], startDate: Date, endDate: Date): string[] {
-    const missedDates: string[] = [];
-    const daysOfWeek = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
-    // Ensure we compare dates only, not times
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-
-    let currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-        const dayIndex = currentDate.getDay();
-        const dayCode = daysOfWeek[dayIndex];
-
-        if (frequency.includes(dayCode)) {
-            missedDates.push(formatDate(currentDate));
-        }
-
-        // Move to the next day
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return missedDates;
-}
-
-// Calculates the list of scheduled days missed between the last completion/freeze and yesterday
-function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates: string[] } {
+// Calculate the date range to check for missed scheduled days
+function getStartAndEndDateOfMissedScheduledDates(habit: Habit, today: Date): { 
+    startDate: Date | null;
+    endDate: Date;
+} {
     const todayDateOnly = new Date(today);
     todayDateOnly.setHours(0, 0, 0, 0);
 
@@ -118,7 +96,7 @@ function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates:
         frequencyUpdateDate.setHours(0, 0, 0, 0);
     }
 
-    let startDate: Date;
+    let startDate: Date | null;
     if (lastCompletionOrFreezeDateStr) {
         const parts = lastCompletionOrFreezeDateStr.split('/');
         const effectiveLastDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
@@ -135,11 +113,11 @@ function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates:
         }
     } else {
         // Cannot determine start date
-        return { missedDates: [] };
+        startDate = null;
     }
 
     // If frequency was updated, use that as the minimum start date
-    if (frequencyUpdateDate && frequencyUpdateDate > startDate) {
+    if (frequencyUpdateDate && startDate && frequencyUpdateDate > startDate) {
         startDate = new Date(frequencyUpdateDate);
     }
 
@@ -147,12 +125,7 @@ function calculateMissedScheduledDays(habit: Habit, today: Date): { missedDates:
     const endDate = new Date(todayDateOnly);
     endDate.setDate(endDate.getDate() - 1);
 
-    if (startDate > endDate) {
-        // Start date is after end date (e.g., last done was yesterday or today)
-        return { missedDates: [] };
-    }
-
-    return { missedDates: findMissedDatesInRange(habit.frequency, startDate, endDate) };
+    return { startDate, endDate };
 }
 
 // New function using freezeMap
@@ -163,90 +136,73 @@ export const checkAndUpdateStreak = (habit: Habit, today: Date): {
     streakBroken: boolean;
 } => {
     const formattedToday = formatDate(today);
-    let freezesConsumed = 0;
-    let streakBroken = false;
-
+    const daysOfWeek = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+    
     // Clone habit and initialize maps if necessary
     const updatedHabit = {
-         ...habit,
-         heatMap: habit.heatMap || [],
-         freezeMap: habit.freezeMap || [],
-         freezesAvailable: habit.freezesAvailable === undefined ? 0 : habit.freezesAvailable
+        ...habit,
+        heatMap: habit.heatMap || [],
+        freezeMap: habit.freezeMap || [],
+        freezesAvailable: habit.freezesAvailable === undefined ? 0 : habit.freezesAvailable
     };
 
-    // Avoid re-checking/consuming freezes multiple times on the same day
+    // Avoid re-checking multiple times on the same day
     if (updatedHabit.lastCheckedDate === formattedToday) {
-        // If checked today, no further action needed here. The state is considered current for the day.
         return { updatedHabit, freezesConsumed: 0, streakBroken: false };
     }
 
-    const { missedDates } = calculateMissedScheduledDays(updatedHabit, today);
-    const daysOfWeek = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa']; // For adding day code to map
-
-    if (missedDates.length > 0) {
-        console.log(`Habit "${updatedHabit.name}": Found ${missedDates.length} missed scheduled day(s): ${missedDates.join(', ')}. Available freezes: ${updatedHabit.freezesAvailable}`);
-
-        for (const missedDate of missedDates) {
-            // Is this date already covered by a freeze?
-            const isAlreadyFrozen = updatedHabit.freezeMap.some(cell => cell.date === missedDate);
-
-            if (isAlreadyFrozen) {
-                console.log(` - Date ${missedDate} is already frozen.`);
-                continue; // Skip, already accounted for
-            }
-
-            // Can we use a freeze?
-            if (updatedHabit.freezesAvailable > 0) {
-                console.log(` - Using freeze for ${missedDate}. Freezes remaining: ${updatedHabit.freezesAvailable - 1}`);
-                updatedHabit.freezesAvailable--;
-                freezesConsumed++;
-
-                // Add to freezeMap
-                const parts = missedDate.split('/');
-                const missedDateObj = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-                const dayCode = daysOfWeek[missedDateObj.getDay()];
-                updatedHabit.freezeMap.push({ day: dayCode, date: missedDate });
-
-            } else {
-                // No freezes left for an unfrozen missed day - streak breaks
-                console.log(` - Not enough freezes for ${missedDate}. Resetting streak.`);
-                updatedHabit.currentStreak = 0;
-                streakBroken = true;
-                // Optional: Clear future freezes if streak breaks?
-                // updatedHabit.freezesAvailable = 0;
-                break; // Stop checking further missed dates for this habit
-            }
-        }
-    }
-
-    // Update check date regardless of outcome
+    // Always update check date
     updatedHabit.lastCheckedDate = formattedToday;
 
-    // Sort freezeMap just in case, although insertion order should be chronological
-    updatedHabit.freezeMap.sort((a, b) => {
-        const dateA = new Date(parseInt(a.date.split('/')[2]), parseInt(a.date.split('/')[1]) - 1, parseInt(a.date.split('/')[0]));
-        const dateB = new Date(parseInt(b.date.split('/')[2]), parseInt(b.date.split('/')[1]) - 1, parseInt(b.date.split('/')[0]));
-        return dateA.getTime() - dateB.getTime();
-    });
-
-    return { updatedHabit, freezesConsumed, streakBroken };
-};
-
-// Helper function to find the last date a habit was scheduled before a given date
-export const findLastScheduledDateBefore = (frequency: string[], beforeDate: Date): string | null => {
-    const daysOfWeek = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
-    let checkDate = new Date(beforeDate);
-    checkDate.setDate(checkDate.getDate() - 1); // Start checking from yesterday
-  
-    for (let i = 0; i < 7; i++) { // Check up to 7 days back
-      const dayIndex = checkDate.getDay();
-      const dayCode = daysOfWeek[dayIndex];
-  
-      if (frequency.includes(dayCode)) {
-        return formatDate(checkDate);
-      }
-      checkDate.setDate(checkDate.getDate() - 1); // Move to the previous day
+    // Early exit if streak is already broken (no point consuming freezes)
+    if (updatedHabit.currentStreak === 0) {
+        return { updatedHabit, freezesConsumed: 0, streakBroken: false };
     }
-  
-    return null; // No scheduled day found within the last week
-  };
+
+    // Get start and end dates for missed scheduled days
+    const { startDate, endDate } = getStartAndEndDateOfMissedScheduledDates(updatedHabit, today);
+
+    if (!startDate || startDate > endDate) {
+        // Start date is after end date (e.g., last done was yesterday or today)
+        return { updatedHabit, freezesConsumed: 0, streakBroken: false };
+    }
+
+    let freezesConsumed = 0;
+    let currentDate = new Date(startDate);
+
+    // Single loop to process all dates
+    while (currentDate <= endDate) {
+        const dayIndex = currentDate.getDay();
+        const dayCode = daysOfWeek[dayIndex];
+        const formattedDate = formatDate(currentDate);
+
+        if (updatedHabit.frequency.includes(dayCode)) {
+            // If no freezes available, break streak and exit
+            if (updatedHabit.freezesAvailable <= 0) {
+                console.log(` - Not enough freezes for ${formattedDate}. Resetting streak.`);
+                updatedHabit.currentStreak = 0;
+                return { updatedHabit, freezesConsumed, streakBroken: true };
+            }
+
+            // Consume a freeze and add to freezeMap
+            console.log(` - Using freeze for ${formattedDate}. Freezes remaining: ${updatedHabit.freezesAvailable - 1}`);
+            updatedHabit.freezesAvailable--;
+            freezesConsumed++;
+            updatedHabit.freezeMap.push({ day: dayCode, date: formattedDate });
+        }
+
+        // Move to the next day
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Only sort if new freezes were added
+    if (freezesConsumed > 0) {
+        updatedHabit.freezeMap.sort((a, b) => {
+            const dateA = new Date(parseInt(a.date.split('/')[2]), parseInt(a.date.split('/')[1]) - 1, parseInt(a.date.split('/')[0]));
+            const dateB = new Date(parseInt(b.date.split('/')[2]), parseInt(b.date.split('/')[1]) - 1, parseInt(b.date.split('/')[0]));
+            return dateA.getTime() - dateB.getTime();
+        });
+    }
+
+    return { updatedHabit, freezesConsumed, streakBroken: false };
+};

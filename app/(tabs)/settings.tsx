@@ -9,8 +9,7 @@ import { reloadHabitReminders, turnOffAllHabitReminders, turnOnAllHabitReminders
 import { ThemePreference, getThemePreference, saveThemePreference } from '@/lib/themeManager';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
-import { generateTestHabits } from '@/lib/testHabits';
-import { useColorScheme } from 'react-native';
+// import { generateTestHabits } from '@/lib/testHabits';
 import { CustomAlert } from '@/components/CustomAlert';
 
 // Helper function to get display name for theme
@@ -24,10 +23,8 @@ const getThemeDisplayName = (themeValue: ThemePreference): string => {
 };
 
 export default function Settings() {
-  const colorScheme = useColorScheme();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const iconColor = useThemeColor({}, 'icon');
   const buttonColor = useThemeColor({}, 'tint');
   const habitItemBackgroundColor = useThemeColor({}, 'card');
   const secondaryTextColor = useThemeColor({}, 'tabIconDefault');
@@ -39,6 +36,7 @@ export default function Settings() {
   const [showNotificationsUnavailableAlert, setShowNotificationsUnavailableAlert] = useState(false);
   const [showReloadSuccessAlert, setShowReloadSuccessAlert] = useState(false);
   const [showReloadErrorAlert, setShowReloadErrorAlert] = useState(false);
+  const [showTestAlert, setShowTestAlert] = useState(false);
   const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
@@ -125,72 +123,85 @@ export default function Settings() {
     }
   };
 
-  const handleCreateTestHabits = async () => {
-    try {
-      const testHabits = generateTestHabits();
-      await AsyncStorage.setItem('habits', JSON.stringify(testHabits));
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Test Habits Created',
-        text2: '5 test habits have been created for testing',
-        position: 'bottom',
-        visibilityTime: 2000,
-      });
-    } catch (error) {
-      console.error('Error creating test habits:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to create test habits',
-        position: 'bottom',
-      });
-    }
-  };
+  // const handleCreateTestHabits = async () => {
+  //   // Check if today matches the test date (Tuesday, May 6, 2025)
+  //   const today = new Date();
+  //   const testDate = new Date(2025, 4, 6); // Month is 0-based, so 4 = May
+  //   const isCorrectDate = today.getFullYear() === testDate.getFullYear() &&
+  //                        today.getMonth() === testDate.getMonth() &&
+  //                        today.getDate() === testDate.getDate();
 
-  const confirmClear = async () => {
-    try {
-      // Get current theme preference
-      const themePreference = await AsyncStorage.getItem('themePreference');
-      
-      // Clear all data
-      await AsyncStorage.clear();
-      
-      // Restore theme preference if it existed
-      if (themePreference) {
-        await AsyncStorage.setItem('themePreference', themePreference);
-      }
+  //   if (!isCorrectDate) {
+  //     setShowTestAlert(true);
+  //     return;
+  //   }
 
-      // Turn off all notifications since habits are cleared
-      await turnOffAllHabitReminders();
+  //   // If it matches the test date, proceed with creating test habits
+  //   try {
+  //     const testHabits = generateTestHabits();
+  //     await AsyncStorage.setItem('habits', JSON.stringify(testHabits));
       
-      Toast.show({
-        type: 'success',
-        text1: 'Storage Cleared',
-        text2: 'All habits have been cleared',
-        position: 'bottom',
-        visibilityTime: 2000,
-      });
-    } catch (error) {
-      console.error('Error clearing storage:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to clear storage',
-        position: 'bottom',
-      });
-    }
-  };
+  //     Toast.show({
+  //       type: 'success',
+  //       text1: 'Test Habits Created',
+  //       text2: '6 test habits have been created for testing',
+  //       position: 'bottom',
+  //       visibilityTime: 2000,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error creating test habits:', error);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Error',
+  //       text2: 'Failed to create test habits',
+  //       position: 'bottom',
+  //     });
+  //   }
+  // };
 
-  const handleClearStorage = async () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to clear all habits? This cannot be undone.')) {
-        confirmClear();
-      }
-    } else {
-      setShowClearDataAlert(true);
-    }
-  };
+  // const confirmClear = async () => {
+  //   try {
+  //     // Get current theme preference
+  //     const themePreference = await AsyncStorage.getItem('themePreference');
+      
+  //     // Clear all data
+  //     await AsyncStorage.clear();
+      
+  //     // Restore theme preference if it existed
+  //     if (themePreference) {
+  //       await AsyncStorage.setItem('themePreference', themePreference);
+  //     }
+
+  //     // Turn off all notifications since habits are cleared
+  //     await turnOffAllHabitReminders();
+      
+  //     Toast.show({
+  //       type: 'success',
+  //       text1: 'Storage Cleared',
+  //       text2: 'All habits have been cleared',
+  //       position: 'bottom',
+  //       visibilityTime: 2000,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error clearing storage:', error);
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Error',
+  //       text2: 'Failed to clear storage',
+  //       position: 'bottom',
+  //     });
+  //   }
+  // };
+
+  // const handleClearStorage = async () => {
+  //   if (Platform.OS === 'web') {
+  //     if (window.confirm('Are you sure you want to clear all habits? This cannot be undone.')) {
+  //       confirmClear();
+  //     }
+  //   } else {
+  //     setShowClearDataAlert(true);
+  //   }
+  // };
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
@@ -237,7 +248,7 @@ export default function Settings() {
           </ThemedText>
         </TouchableOpacity>
 
-        <ThemedView style={[styles.section, { marginTop: 30 }]}>
+        {/* <ThemedView style={[styles.section, { marginTop: 30 }]}>
           <ThemedText style={[styles.sectionTitle, { color: textColor }]}>Testing</ThemedText>
           <TouchableOpacity 
             style={[styles.button, { backgroundColor: buttonColor }]} 
@@ -256,7 +267,7 @@ export default function Settings() {
               Clear All Data
             </ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </ThemedView> */}
       </ThemedView>
 
       <Modal
@@ -291,7 +302,7 @@ export default function Settings() {
         </View>
       </Modal>
 
-      <CustomAlert
+      {/* <CustomAlert
         visible={showClearDataAlert}
         title="Clear Habits Data"
         message="Are you sure you want to clear all habits? This cannot be undone."
@@ -311,7 +322,7 @@ export default function Settings() {
           }
         ]}
         onDismiss={() => setShowClearDataAlert(false)}
-      />
+      /> */}
 
       <CustomAlert
         visible={showNotificationsUnavailableAlert}
@@ -354,6 +365,20 @@ export default function Settings() {
         ]}
         onDismiss={() => setShowReloadErrorAlert(false)}
       />
+
+      {/* <CustomAlert
+        visible={showTestAlert}
+        title="Test Habits Date Warning"
+        message="The test habits are designed to work specifically on Tuesday (May 6, 2025) for accurate testing. Please modify the test data in testHabits.ts if testing on a different day."
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowTestAlert(false),
+            style: "cancel"
+          }
+        ]}
+        onDismiss={() => setShowTestAlert(false)}
+      /> */}
     </ThemedView>
   );
 }

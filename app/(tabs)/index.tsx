@@ -6,7 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { formatDate, checkAndUpdateStreak, findLastScheduledDateBefore } from "@/lib/utils";
+import { formatDate, checkAndUpdateStreak } from "@/lib/utils";
 import { requestNotificationPermissions } from '@/lib/notifications';
 import { Habit } from "@/lib/types";
 import * as Haptics from 'expo-haptics';
@@ -439,11 +439,19 @@ const HomeScreen = () => {
 
                 // --- Updated Logic for isFrozenToday ---
                 let isFrozenToday = false;
-                const lastScheduledDate = findLastScheduledDateBefore(item.frequency, today);
-                if (lastScheduledDate) {
-                  const isLastScheduledFrozen = (item.freezeMap || []).some(cell => cell.date === lastScheduledDate);
-                  // Frozen style applies if last scheduled day is frozen AND today isn't completed
-                  isFrozenToday = isLastScheduledFrozen && !isCompletedToday;
+                
+                // Get last dates from both maps
+                const lastHeatMapDate = item.heatMap?.length > 0 ? item.heatMap[item.heatMap.length - 1].date : null;
+                const lastFreezeMapDate = item.freezeMap?.length > 0 ? item.freezeMap[item.freezeMap.length - 1].date : null;
+                
+                if (lastHeatMapDate && lastFreezeMapDate) {
+                    const lastHeatDate = new Date(parseInt(lastHeatMapDate.split('/')[2]), parseInt(lastHeatMapDate.split('/')[1]) - 1, parseInt(lastHeatMapDate.split('/')[0]));
+                    const lastFreezeDate = new Date(parseInt(lastFreezeMapDate.split('/')[2]), parseInt(lastFreezeMapDate.split('/')[1]) - 1, parseInt(lastFreezeMapDate.split('/')[0]));
+                    
+                    // If last heat map entry is not newer than last freeze AND streak isn't 0
+                    if (!(lastHeatDate > lastFreezeDate) && item.currentStreak !== 0) {
+                        isFrozenToday = true;
+                    }
                 }
                 // --- End of Updated Logic ---
 

@@ -31,10 +31,12 @@
           "image": "./assets/images/splash-light.png",
           "backgroundColor": "#ffffff",
           "androidSplashScreenBackground": "#ffffff",
+          "resizeMode": "contain",
           "dark": {
             "image": "./assets/images/splash-dark.png",
             "backgroundColor": "#000000",
-            "androidSplashScreenBackground": "#000000"
+            "androidSplashScreenBackground": "#000000",
+            "resizeMode": "contain"
           }
         }
       ]
