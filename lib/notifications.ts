@@ -7,7 +7,6 @@ const isWeb = Platform.OS === 'web';
 
 export async function requestNotificationPermissions() {
   if (isWeb) {
-    console.log('Notifications not available on web platform');
     return;
   }
   
@@ -19,7 +18,6 @@ export async function requestNotificationPermissions() {
 
 export async function reloadHabitReminders(habits: Habit[]) {
   if (isWeb) {
-    console.log('Notification scheduling not available on web platform');
     return;
   }
   
@@ -38,7 +36,6 @@ export async function reloadHabitReminders(habits: Habit[]) {
 
 export async function turnOffAllHabitReminders() {
   if (isWeb) {
-    console.log('Notification scheduling not available on web platform');
     return;
   }
   
@@ -52,7 +49,6 @@ export async function turnOffAllHabitReminders() {
 
 export async function turnOnAllHabitReminders(habits: Habit[]) {
   if (isWeb) {
-    console.log('Notification scheduling not available on web platform');
     return;
   }
   
@@ -65,7 +61,6 @@ export async function turnOnAllHabitReminders(habits: Habit[]) {
 
 export async function scheduleHabitReminder(habit: Habit) {
   if (isWeb) {
-    console.log('Notification scheduling not available on web platform');
     return;
   }
 

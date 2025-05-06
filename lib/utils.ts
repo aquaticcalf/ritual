@@ -179,13 +179,11 @@ export const checkAndUpdateStreak = (habit: Habit, today: Date): {
         if (updatedHabit.frequency.includes(dayCode)) {
             // If no freezes available, break streak and exit
             if (updatedHabit.freezesAvailable <= 0) {
-                console.log(` - Not enough freezes for ${formattedDate}. Resetting streak.`);
                 updatedHabit.currentStreak = 0;
                 return { updatedHabit, freezesConsumed, streakBroken: true };
             }
 
             // Consume a freeze and add to freezeMap
-            console.log(` - Using freeze for ${formattedDate}. Freezes remaining: ${updatedHabit.freezesAvailable - 1}`);
             updatedHabit.freezesAvailable--;
             freezesConsumed++;
             updatedHabit.freezeMap.push({ day: dayCode, date: formattedDate });

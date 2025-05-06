@@ -165,7 +165,6 @@ const HomeScreen = () => {
             streakBeforeDecrement % 5 === 0 &&
             unmarkedHabit.currentStreak === streakBeforeDecrement - 1)
         {
-          console.log(`Habit "${unmarkedHabit.name}": Removing freeze granted at streak ${streakBeforeDecrement} due to unmarking.`);
           unmarkedHabit.freezesAvailable = Math.max(0, (unmarkedHabit.freezesAvailable || 0) - 1);
         }
 
@@ -235,12 +234,10 @@ const HomeScreen = () => {
       // Increment streak (will correctly become 1 if it was reset to 0 by the check)
       markedHabit.currentStreak += 1; 
       const newStreak = markedHabit.currentStreak;
-      console.log(`Habit "${markedHabit.name}": Streak updated to ${newStreak}`);
 
       // Grant freeze?
       if (newStreak > 0 && newStreak % 5 === 0) {
         markedHabit.freezesAvailable = (markedHabit.freezesAvailable || 0) + 1;
-        console.log(`Habit "${markedHabit.name}": Freeze granted! New total: ${markedHabit.freezesAvailable}`);
         Toast.show({
             type: 'info',
             text1: 'Freeze Earned!',
@@ -357,7 +354,6 @@ const HomeScreen = () => {
       const processedHabits = await Promise.all(processedHabitsPromises);
 
       if (habitsNeedSaving) {
-        console.log("Habits updated after freeze/streak check, saving...");
         await AsyncStorage.setItem("habits", JSON.stringify(processedHabits));
       }
 
