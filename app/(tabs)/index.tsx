@@ -462,9 +462,41 @@ const HomeScreen = () => {
           }
         >
           {habits.length === 0 ? (
-            <ThemedText style={{ color: textColor, opacity: 0.5, paddingLeft: 5 }}>
-              No habits yet, create a habit by clicking + button
-            </ThemedText>
+            <View style={{ 
+              flex: 1, 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              paddingHorizontal: 20 
+            }}>
+              <LogoIcon 
+                width={48} 
+                height={48} 
+                style={{ marginBottom: 15 }}
+              />
+              <ThemedText style={{ 
+                color: textColor, 
+                fontSize: 20, 
+                fontWeight: '600',
+                marginBottom: 10,
+                textAlign: 'center'
+              }}>
+                Welcome to Ritual
+              </ThemedText>
+              <ThemedText style={{ 
+                color: secondaryTextColor, 
+                textAlign: 'center',
+                lineHeight: 22
+              }}>
+                Transform your habits into daily rituals. Track your progress with heatmaps, build streaks, and never break the chain.
+              </ThemedText>
+              <ThemedText style={{ 
+                color: secondaryTextColor,
+                marginTop: 15,
+                fontSize: 13
+              }}>
+                Tap the + button below to begin
+              </ThemedText>
+            </View>
           ) : (
             <FlatList
               data={habits}
