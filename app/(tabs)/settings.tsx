@@ -218,8 +218,10 @@ export default function Settings() {
             <Ionicons name="chevron-forward" size={20} color={secondaryTextColor} style={styles.arrowIcon} />
           </View>
         </TouchableOpacity>
+
+        <ThemedText style={[styles.settingLabel, { color: textColor, marginTop: 15 }]}>Notifications</ThemedText>
         <ThemedView style={[styles.notificationContainer, styles.settingItem, { backgroundColor: habitItemBackgroundColor, paddingVertical: 10 }]}>
-          <ThemedText style={[styles.settingLabel, { color: textColor, marginTop: 0 }]}>Notifications</ThemedText>
+          <ThemedText style={[styles.settingItemText, { color: textColor }]}>Enable Notifications</ThemedText>
           <Switch 
             value={notificationsEnabled} 
             onValueChange={handleToggleNotifications}
@@ -232,42 +234,25 @@ export default function Settings() {
             ios_backgroundColor={secondaryTextColor + '40'}
           />
         </ThemedView>
+        
+        <TouchableOpacity 
+          style={[styles.settingItem, { 
+            backgroundColor: habitItemBackgroundColor,
+            opacity: (isWeb || !notificationsEnabled) ? 0.5 : 1 
+          }]} 
+          onPress={handleReloadReminders}
+          disabled={isWeb || !notificationsEnabled}
+        >
+          <ThemedText style={[styles.settingItemText, { color: textColor }]}>
+            Reload Habit Reminders
+          </ThemedText>
+          <View style={styles.valueContainer}>
+            <Ionicons name="reload" size={20} color={secondaryTextColor} />
+          </View>
+        </TouchableOpacity>
         {isWeb && (
           <ThemedText style={[styles.disclaimer, { color: secondaryTextColor }]}>*Notifications are not available on web platforms</ThemedText>
         )}
-        <TouchableOpacity 
-          style={[styles.button, { 
-            backgroundColor: buttonColor,
-            opacity: isWeb ? 0.5 : 1 
-          }]} 
-          onPress={handleReloadReminders}
-          disabled={isWeb}
-        >
-          <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>
-            Reload Habit Reminders
-          </ThemedText>
-        </TouchableOpacity>
-
-        {/* <ThemedView style={[styles.section, { marginTop: 30 }]}>
-          <ThemedText style={[styles.sectionTitle, { color: textColor }]}>Testing</ThemedText>
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: buttonColor }]} 
-            onPress={handleCreateTestHabits}
-          >
-            <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>
-              Create Test Habits
-            </ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.button, styles.dangerButton, { marginTop: 10 }]} 
-            onPress={handleClearStorage}
-          >
-            <ThemedText style={[styles.buttonText, { color: backgroundColor }]}>
-              Clear All Data
-            </ThemedText>
-          </TouchableOpacity>
-        </ThemedView> */}
       </ThemedView>
 
       <Modal
