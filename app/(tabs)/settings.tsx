@@ -220,7 +220,7 @@ export default function Settings() {
         </TouchableOpacity>
 
         <ThemedText style={[styles.settingLabel, { color: textColor, marginTop: 15 }]}>Notifications</ThemedText>
-        <ThemedView style={[styles.notificationContainer, styles.settingItem, { backgroundColor: habitItemBackgroundColor, paddingVertical: 10 }]}>
+        <ThemedView style={[styles.settingItem, { backgroundColor: habitItemBackgroundColor, paddingVertical: 5 }]}>
           <ThemedText style={[styles.settingItemText, { color: textColor }]}>Enable Notifications</ThemedText>
           <Switch 
             value={notificationsEnabled} 
@@ -401,8 +401,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.6,
     paddingHorizontal: 5,
-  },
-  notificationContainer: {
   },
   button: {
     padding: 15,
