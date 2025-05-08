@@ -158,11 +158,11 @@ const HabitPage = () => {
 
         <ThemedView style={styles.header}>
           <TouchableOpacity style={[styles.button, { backgroundColor: cardBackgroundColor }]} onPress={() => router.push({ pathname: '/createHabit', params: { habit: JSON.stringify(habitData) } })}>
-            <Ionicons name="pencil" size={20} color={textColor} />
+            <MaterialIcons name="edit" size={20} color={textColor} />
             <ThemedText style={[styles.buttonText, { color: secondaryTextColor }]}> Edit</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.button, { backgroundColor: cardBackgroundColor }]} onPress={confirmDelete}>
-            <Ionicons name="trash" size={20} color={textColor} />
+            <MaterialIcons name="delete" size={20} color={textColor} />
             <ThemedText style={[styles.buttonText, { color: secondaryTextColor }]}> Delete</ThemedText>
           </TouchableOpacity>
         </ThemedView>

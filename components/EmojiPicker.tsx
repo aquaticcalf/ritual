@@ -18,20 +18,20 @@ type IconCategories = {
 
 const iconCategories: IconCategories = {
   "Habits & Activities": [
-    "fitness-center", "directions-run", "menu-book", "self-improvement", "water-drop", "restaurant", "palette", "music-note", "sports-esports", "edit", "track-changes", "sports-soccer",
-    "sports-handball", "pedal-bike", "psychology", "create", "piano", "music-video", "camera-alt"
+    "fitness-center", "directions-run", "book", "psychology", "opacity", "restaurant", "palette", "music-note", "games", "edit", "track-changes", "sports-soccer",
+    "sports-handball", "pedal-bike", "psychology", "create", "piano", "music-video", "photo-camera"
   ],
   "Health & Wellness": [
     "spa", "directions-walk", "medication", "restaurant-menu", "eco", "grass", "face", "pool", "water", "bedtime",
-    "park", "coffee", "science", "food-bank", "medical-services", "clean-hands", "dentistry", "self-improvement", "pool", "explore"
+    "park", "local-cafe", "science", "local-dining", "medical-services", "clean-hands", "medical-services", "self-improvement", "pool", "explore"
   ],
   "Productivity": [
-    "laptop", "smartphone", "email", "calendar-today", "alarm", "insert-chart", "check-circle", "trending-up", "lightbulb", "push-pin",
-    "place", "track-changes", "assignment", "attachment", "search", "mobile-screen-share", "work", "folder", "edit-note", "edit"
+    "laptop", "smartphone", "email", "today", "alarm", "insert-chart", "check-circle", "trending-up", "lightbulb", "push-pin",
+    "place", "track-changes", "assignment", "attach-file", "search", "screen-share", "work", "folder", "edit-note", "edit"
   ],
   "Lifestyle": [
-    "wb-sunny", "nightlight", "grass", "pets", "pets", "coffee", "home", "directions-car", "account-balance-wallet", "groups",
-    "celebration", "card-giftcard", "chair", "bathtub", "bed", "theater-comedy", "movie", "tv", "headphones", "phone-android"
+    "wb-sunny", "nights-stay", "grass", "pets", "pets", "local-cafe", "home", "directions-car", "account-balance-wallet", "groups",
+    "celebration", "card-giftcard", "chair", "bathtub", "bed", "theater-comedy", "local-movies", "tv", "headphones", "phone-android"
   ]
 };
 
