@@ -212,7 +212,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
+    gap: 10,
   },
   title: {
     fontSize: 20,
@@ -221,7 +222,8 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 10,
+    gap: 10,
   },
   statBox: {
     flex: 1,
@@ -229,7 +231,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 10,
     alignItems: 'center',
-    marginHorizontal: 5,
   },
   statTitle: {
     fontSize: 14,
@@ -261,7 +262,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
-    marginHorizontal: 5,
   },
   buttonText: {
     fontSize: 14,

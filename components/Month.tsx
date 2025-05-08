@@ -104,19 +104,19 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
     flexWrap: "wrap",
-    height: 7 * 14, 
-    width: 6 * 14,  
+    height: 7 * 18, // Increased from 14 to accommodate larger cells
+    width: 6 * 18,  // Increased from 14 to accommodate larger cells
   },
   cell: {
-    width: 12,
-    height: 12,
+    width: 16, // Increased from 12
+    height: 16, // Increased from 12
     margin: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 2,
+    borderRadius: 3, // Slightly increased for better aesthetics with larger cells
   },
   text: {
-    fontSize: 8,
+    fontSize: 10, // Increased from 8 to be more readable in larger cells
   },
 });
 

@@ -82,7 +82,7 @@ export function HeatMap({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (scrollViewRef.current) {
-        const MONTH_WIDTH = 120; 
+        const MONTH_WIDTH = 108; // Adjusted to match new monthWrapper width
         const scrollToX = currentMonth * MONTH_WIDTH;
         scrollViewRef.current.scrollTo({ x: scrollToX, animated: true });
       }
@@ -151,12 +151,12 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   scrollContent: {
-    paddingRight: 20, // Add some padding at the end of the scroll
+    paddingRight: 15, // Reduced from 20
   },
   monthWrapper: {
-    marginRight: 20,
+    marginRight: 12, // Reduced from 20
     alignItems: "center",
-    width: 100, // Set a consistent width for month container
+    width: 108, // Adjusted to match new month component width
   },
   monthName: {
     fontSize: 14,
