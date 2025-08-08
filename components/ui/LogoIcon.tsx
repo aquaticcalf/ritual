@@ -70,7 +70,7 @@ export function LogoIcon({
 	color,
 	style,
 }: LogoIconProps) {
-	const defaultColor = useThemeColor({}, "text")
+	const defaultColor = useThemeColor({}, "tint")
 	const iconColor = color || defaultColor
 
 	return (

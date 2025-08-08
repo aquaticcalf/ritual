@@ -37,7 +37,7 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
 	const blueColor = useThemeColor({}, "frozenBackground")
 	const grayColor = useThemeColor({}, "tabIconDefault")
 	const textColorOnColored = useThemeColor({}, "background")
-	const textColorOnGray = grayColor
+	const textColorOnGray = useThemeColor({}, "text")
 
 	const daysInMonth = isLeapYear
 		? LEAP_YEAR_DAYS_IN_MONTH[month]
@@ -87,7 +87,7 @@ const MonthComponent: React.FC<MonthComponentProps> = ({
 
 				return (
 					<ThemedView
-						key={day}
+						key={_index}
 						style={[
 							styles.cell,
 							{ backgroundColor: cellBackgroundColor, opacity },
@@ -107,19 +107,21 @@ const styles = StyleSheet.create({
 	container: {
 		flexDirection: "column",
 		flexWrap: "wrap",
-		height: 7 * 18, // Increased from 14 to accommodate larger cells
-		width: 6 * 18, // Increased from 14 to accommodate larger cells
+		height: 7 * 18,
+		width: 6 * 18,
+		borderRadius: 8,
 	},
 	cell: {
-		width: 16, // Increased from 12
-		height: 16, // Increased from 12
+		width: 16,
+		height: 16,
 		margin: 1,
 		justifyContent: "center",
 		alignItems: "center",
-		borderRadius: 3, // Slightly increased for better aesthetics with larger cells
+		borderRadius: 4,
 	},
 	text: {
-		fontSize: 10, // Increased from 8 to be more readable in larger cells
+		fontSize: 10,
+		fontWeight: "500",
 	},
 })
 

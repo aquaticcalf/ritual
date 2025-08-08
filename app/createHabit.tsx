@@ -415,11 +415,13 @@ const CreateHabitScreen = () => {
 				style={[styles.createButton, { backgroundColor: buttonColor }]}
 				onPress={habitData ? handleEditHabit : handleCreateHabit}
 			>
-				<ThemedText
-					style={[styles.createButtonText, { color: backgroundColor }]}
-				>
-					{habitData ? "Update Habit" : "Create Habit"}
-				</ThemedText>
+				<ThemedView style={styles.createButtonInner} useGradient={true}>
+					<ThemedText
+						style={[styles.createButtonText, { color: backgroundColor }]}
+					>
+						{habitData ? "Update Habit" : "Create Habit"}
+					</ThemedText>
+				</ThemedView>
 			</TouchableOpacity>
 
 			<EmojiPicker
@@ -502,11 +504,16 @@ const styles = StyleSheet.create({
 		opacity: 0.5,
 	},
 	createButton: {
-		padding: 15,
+		padding: 0,
 		borderRadius: 30,
-		justifyContent: "center",
-		alignItems: "center",
 		marginTop: 40,
+		overflow: "hidden",
+	},
+	createButtonInner: {
+		padding: 15,
+		width: "100%",
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	createButtonText: {
 		fontSize: 18,

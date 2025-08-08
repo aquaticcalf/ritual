@@ -285,7 +285,7 @@ export default function Settings() {
 						thumbColor={
 							notificationsEnabled ? buttonColor : habitItemBackgroundColor
 						}
-						ios_backgroundColor={`${secondaryTextColor}40`}
+						iosbackgroundColor={`${secondaryTextColor}40`}
 					/>
 				</ThemedView>
 

@@ -13,7 +13,6 @@ import {
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
-	useColorScheme,
 	View,
 } from "react-native"
 import Toast from "react-native-toast-message"
@@ -23,6 +22,7 @@ import { ThemedView } from "@/components/ThemedView"
 import { Tooltip } from "@/components/Tooltip"
 import { LogoIcon } from "@/components/ui/LogoIcon"
 import WeekMap from "@/components/WeekMap"
+import { useColorScheme } from "@/hooks/useColorScheme"
 import { useThemeColor } from "@/hooks/useThemeColor"
 import { requestNotificationPermissions } from "@/lib/notifications"
 import type { Habit } from "@/lib/types"
@@ -31,29 +31,29 @@ import { checkAndUpdateStreak, formatDate } from "@/lib/utils"
 const HomeScreen = () => {
 	const _colorScheme = useColorScheme()
 	const [habits, setHabits] = useState<Habit[]>([])
-	const [_isLoading, setIsLoading] = useState(true)
-	const [_refreshing, setRefreshing] = useState(false)
-	const [_showUnmarkAlert, setShowUnmarkAlert] = useState(false)
-	const [_habitToUnmark, setHabitToUnmark] = useState<string | null>(null)
-	const [_unmarkFunction, setUnmarkFunction] = useState<(() => void) | null>(
+	const [isLoading, setIsLoading] = useState(true)
+	const [refreshing, setRefreshing] = useState(false)
+	const [showUnmarkAlert, setShowUnmarkAlert] = useState(false)
+	const [habitToUnmark, setHabitToUnmark] = useState<string | null>(null)
+	const [unmarkFunction, setUnmarkFunction] = useState<(() => void) | null>(
 		null,
 	)
-	const [_tooltipVisible, _setTooltipVisible] = useState(false)
-	const [_tooltipPosition, _setTooltipPosition] = useState({ x: 0, y: 0 })
-	const _router = useRouter()
-	const _backgroundColor = useThemeColor({}, "background")
-	const _textColor = useThemeColor({}, "text")
-	const _secondaryTextColor = useThemeColor({}, "tabIconDefault")
-	const _iconColor = useThemeColor({}, "icon")
-	const _buttonColor = useThemeColor({}, "tint")
-	const _habitItemBackgroundColor = useThemeColor({}, "card")
+	const [tooltipVisible, setTooltipVisible] = useState(false)
+	const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+	const router = useRouter()
+	const backgroundColor = useThemeColor({}, "background")
+	const textColor = useThemeColor({}, "text")
+	const secondaryTextColor = useThemeColor({}, "tabIconDefault")
+	const iconColor = useThemeColor({}, "icon")
+	const buttonColor = useThemeColor({}, "tint")
+	const habitItemBackgroundColor = useThemeColor({}, "card")
 	const frozenHabitBackgroundColor = useThemeColor({}, "frozenBackground") // Ensure this exists in themes
 	const frozenHabitBorderColor = useThemeColor({}, "frozenBorder") // Ensure this exists in themes
 	const scaleAnimations = useRef<{ [key: string]: Animated.Value }>({})
-	const _infoButtonRef = useRef<View>(null)
+	const infoButtonRef = useRef<View>(null)
 
 	// Define styles inside the component to access theme colors
-	const _styles = StyleSheet.create({
+	const styles = StyleSheet.create({
 		container: {
 			flex: 1,
 			paddingHorizontal: 15,
@@ -125,7 +125,7 @@ const HomeScreen = () => {
 		id: string
 	}
 
-	const _handleMarkAsDone = async ({
+	const handleMarkAsDone = async ({
 		id,
 	}: HandleMarkAsDoneParams): Promise<void> => {
 		const habitIndex = habits.findIndex(h => h.id === id)
@@ -484,7 +484,9 @@ const HomeScreen = () => {
 	}, [])
 
 	return (
-		<ThemedView style={[styles.container, { backgroundColor }]}>
+		<ThemedView
+			style={[styles.container, { backgroundColor: backgroundColor }]}
+		>
 			<View style={styles.headerContainer}>
 				<View style={{ flexDirection: "row", alignItems: "center" }}>
 					<LogoIcon style={{ marginRight: 8 }} />
@@ -701,7 +703,7 @@ const HomeScreen = () => {
 															/>
 														) : (
 															<MaterialIcons
-																name={item.icon as string}
+																name={item.icon as any}
 																size={24}
 																color={iconColor}
 																style={

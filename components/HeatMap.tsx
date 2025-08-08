@@ -109,7 +109,7 @@ export function HeatMap({
 	}, [currentMonth])
 
 	return (
-		<ThemedView style={styles.container}>
+		<ThemedView style={styles.container} useGradient={true}>
 			<ThemedText style={styles.title}>Heat Map for {year}</ThemedText>
 			<ScrollView
 				ref={scrollViewRef}

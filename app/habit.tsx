@@ -7,7 +7,6 @@ import {
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
-	useColorScheme,
 	View,
 } from "react-native"
 import { CustomAlert } from "@/components/CustomAlert"
@@ -15,6 +14,7 @@ import { HeatMap } from "@/components/HeatMap"
 import { ThemedText } from "@/components/ThemedText"
 import { ThemedView } from "@/components/ThemedView"
 import { LogoIcon } from "@/components/ui/LogoIcon"
+import { useColorScheme } from "@/hooks/useColorScheme"
 import { useThemeColor } from "@/hooks/useThemeColor"
 import { reloadHabitReminders } from "@/lib/notifications"
 import type { Habit } from "@/lib/types"
@@ -29,6 +29,7 @@ const HabitPage = () => {
 	const textColor = useThemeColor({}, "text")
 	const cardBackgroundColor = useThemeColor({}, "card")
 	const tintColor = useThemeColor({}, "tint")
+	const secondaryTextColor = useThemeColor({}, "secondary")
 	const navigation = useNavigation()
 	const router = useRouter()
 
@@ -77,7 +78,9 @@ const HabitPage = () => {
 							/>
 						) : (
 							<MaterialIcons
-								name={habitData.icon as string}
+								name={
+									habitData.icon === "ritual-logo" ? "star" : habitData.icon
+								}
 								size={24}
 								color={textColor}
 								style={{ marginRight: 8 }}

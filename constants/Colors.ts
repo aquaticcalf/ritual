@@ -1,43 +1,47 @@
 /**
- * Updated light mode with softer, brighter colors to match a light theme.
- * Maintains visual harmony with the time picker component's color scheme.
+ * Ritual-themed color palette inspired by warm, earthy tones.
+ * Uses colors from ritual palette: brown, alloy-orange, chocolate, seal-brown, and ochre.
  */
 
 export const Colors = {
 	light: {
-		text: "#4A3B33", // Dark foreground
-		background: "#FDFBF7", // Light background
-		tint: "#D97706", // Primary - Brighter orange-brown
-		icon: "#D97706", // Primary foreground - Matching tint
-		tabIconDefault: "#78716C", // Muted foreground
-		tabIconSelected: "#D97706", // Primary - Matching tint
-		card: "#F8F4EE", // Card background
-		modalBackdrop: "rgba(255, 255, 255, 0.7)",
+		text: "#5E2403", // Seal brown for text
+		background: "#FDF7F2", // Light warm background
+		tint: "#C46004", // Alloy orange as primary
+		icon: "#C46004", // Alloy orange for icons
+		tabIconDefault: "#964908", // Brown for inactive tabs
+		tabIconSelected: "#C46004", // Alloy orange for selected tabs
+		card: "#FFF5EB", // Light card background
+		modalBackdrop: "rgba(255, 248, 240, 0.8)",
 		errorColor: "#991B1B", // Destructive
-		secondary: "#E4C090", // Secondary
-		accent: "#f2daba", // Accent
-		border: "#E4D9BC", // Border
-		input: "#E4D9BC", // Input
-		muted: "#F1E9DA", // Muted
-		frozenBackground: "#E3F2FD", // Very light blue background for frozen state
-		frozenBorder: "#90CAF9", // Slightly darker blue border for frozen state
+		secondary: "#CF6E0B", // Ochre as secondary
+		accent: "#C76405", // Alloy orange 2 as accent
+		border: "#D9BFA0", // Lighter border
+		input: "#EBD6BD", // Input background
+		muted: "#F8EBD8", // Muted background
+		frozenBackground: "#E8F0F5", // Light blue background for frozen state
+		frozenBorder: "#9ABED2", // Slightly darker blue border for frozen state
+		gradientStart: "#964908", // Brown for gradients
+		gradientEnd: "#CF6E0B", // Ochre for gradients
 	},
 	dark: {
-		text: "#F5F5F4", // Light foreground
-		background: "#1C1917", // Dark background
-		tint: "#F97316", // Primary
-		icon: "#F97316", // Primary foreground
-		tabIconDefault: "#A8A29E", // Muted foreground
-		tabIconSelected: "#F97316", // Primary
-		card: "#292524", // Card background
-		modalBackdrop: "rgba(0, 0, 0, 0.7)",
+		text: "#F5F0E8", // Light text on dark
+		background: "#221509", // Very dark brown background
+		tint: "#C76405", // Alloy orange 2 as primary
+		icon: "#C76405", // Alloy orange 2 for icons
+		tabIconDefault: "#A88D75", // Muted foreground
+		tabIconSelected: "#CF6E0B", // Ochre for selected tabs
+		card: "#2D1D0C", // Dark card background
+		modalBackdrop: "rgba(20, 12, 5, 0.8)",
 		errorColor: "#DC2626", // Destructive
-		secondary: "#57534E", // Secondary
-		accent: "#1e4252", // Accent
-		border: "#44403C", // Border
-		input: "#44403C", // Input
-		muted: "#292524", // Muted
-		frozenBackground: "#37474F", // Slightly lighter dark gray/blue background for frozen state
-		frozenBorder: "#4FC3F7", // Muted cyan border for frozen state
+		secondary: "#7A3505", // Chocolate as secondary
+		accent: "#964908", // Brown as accent
+		border: "#5E2403", // Seal brown for borders
+		input: "#4D2512", // Dark input background
+		muted: "#2D1D0C", // Muted background
+		frozenBackground: "#2A353D", // Dark blue background for frozen state
+		frozenBorder: "#5B8BA3", // Blue border for frozen state
+		gradientStart: "#5E2403", // Seal brown for gradients
+		gradientEnd: "#964908", // Brown for gradients
 	},
 }

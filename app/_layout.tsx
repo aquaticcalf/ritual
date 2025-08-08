@@ -38,8 +38,8 @@ export default function RootLayout() {
 				style={[
 					{ borderLeftColor: "#69C779" },
 					colorScheme === "dark"
-						? { backgroundColor: "#292524" }
-						: { backgroundColor: "#F8F4EE" },
+						? { backgroundColor: "#2D1D0C" }
+						: { backgroundColor: "#FFF5EB" },
 				]}
 				contentContainerStyle={{ paddingHorizontal: 15 }}
 				text1Style={{
@@ -131,7 +131,7 @@ export default function RootLayout() {
 					headerStyle: {
 						backgroundColor: backgroundColor,
 					},
-					headerTintColor: colorScheme === "dark" ? "#F5F5F4" : "#4A3B33",
+					headerTintColor: colorScheme === "dark" ? "#F5F0E8" : "#5E2403",
 					headerTitleStyle: {
 						fontWeight: "600",
 					},
