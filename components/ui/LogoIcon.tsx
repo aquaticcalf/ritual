@@ -1,7 +1,6 @@
-import React from 'react';
-import { ViewStyle } from 'react-native';
-import { SvgXml } from 'react-native-svg';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import type { ViewStyle } from "react-native"
+import { SvgXml } from "react-native-svg"
+import { useThemeColor } from "@/hooks/useThemeColor"
 
 export const logoSvgContent = `<?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
@@ -56,25 +55,30 @@ fill="currentColor" stroke="none">
 21 -114 -21 -219 -127 -318 -81 -76 -97 -87 -112 -82 -9 3 -11 0 -6 -8 5 -9 4
 -11 -4 -6 -6 4 -18 3 -26 -4 -21 -17 -201 -19 -260 -3 -130 36 -241 118 -286
 211 -19 37 -24 68 -27 150 -9 216 53 369 186 460 64 43 105 65 162 83 62 20
-105 22 202 10z"/></g></svg>`;
+105 22 202 10z"/></g></svg>`
 
 interface LogoIconProps {
-  width?: number;
-  height?: number;
-  color?: string;
-  style?: ViewStyle;
+	width?: number
+	height?: number
+	color?: string
+	style?: ViewStyle
 }
 
-export function LogoIcon({ width = 28, height = 28, color, style }: LogoIconProps) {
-  const defaultColor = useThemeColor({}, 'text');
-  const iconColor = color || defaultColor;
-  
-  return (
-    <SvgXml
-      xml={logoSvgContent.replace('currentColor', iconColor)}
-      width={width}
-      height={height}
-      style={style}
-    />
-  );
+export function LogoIcon({
+	width = 28,
+	height = 28,
+	color,
+	style,
+}: LogoIconProps) {
+	const defaultColor = useThemeColor({}, "text")
+	const iconColor = color || defaultColor
+
+	return (
+		<SvgXml
+			xml={logoSvgContent.replace("currentColor", iconColor)}
+			width={width}
+			height={height}
+			style={style}
+		/>
+	)
 }
