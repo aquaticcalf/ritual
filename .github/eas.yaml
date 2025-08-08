@@ -1,0 +1,367 @@
+name: eas ci cd
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      buildType:
+        type: choice
+        description: "build type to run"
+        options:
+          - dev
+          - prod-apk
+          - prod-aab
+          - all
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  NODE_OPTIONS: --openssl-legacy-provider
+
+jobs:
+  check-skip:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.repository == github.event.repository.full_name && !github.event.repository.fork"
+    steps:
+      - name: skip ci check
+        run: echo "proceeding with workflow"
+
+  build-production:
+    needs: check-skip
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && !github.event.repository.fork
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: setup bun cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: install dependencies
+        run: |
+          bun install --frozen-lockfile
+          bun add -g eas-cli@latest
+
+      - name: setup eas build cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.eas-build-local
+          key: ${{ runner.os }}-eas-build-local-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-eas-build-local-
+
+      - name: verify eas cli installation
+        run: |
+          echo "EAS CLI version:"
+          eas --version
+
+      - name: build production apk
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
+          eas build --platform android --profile production-apk --local --non-interactive --output=./app-prod.apk
+        env:
+          NODE_ENV: production
+
+      - name: build production aab
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
+          eas build --platform android --profile production --local --non-interactive --output=./app-prod.aab
+        env:
+          NODE_ENV: production
+
+      - name: generate build information
+        id: build-info
+        run: |
+          if [ -f ./app.config.js ]; then
+            VERSION=$(bun run -e "const config = require('./app.config.js'); console.log(typeof config === 'function' ? config().expo.version : config.expo.version)")
+          elif [ -f ./app.json ]; then
+            VERSION=$(bun run -e "console.log(require('./app.json').expo.version)")
+          else
+            echo "No app.json or app.config.js found"
+            exit 1
+          fi
+          BUILD_NUMBER=$(date +%Y%m%d%H%M)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          if git describe --tags --abbrev=0 > /dev/null 2>&1; then
+            LAST_TAG=$(git describe --tags --abbrev=0)
+            git log $LAST_TAG..HEAD --pretty=format:"- %s" > changelog.md
+          else
+            git log --pretty=format:"- %s" -n 10 > changelog.md
+          fi
+
+      - name: create github release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          name: "production release v${{ steps.build-info.outputs.version }}-${{ steps.build-info.outputs.build_number }}"
+          tag_name: "v${{ steps.build-info.outputs.version }}-${{ steps.build-info.outputs.build_number }}"
+          files: |
+            ./app-prod.apk
+            ./app-prod.aab
+          body_path: changelog.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: upload production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-builds
+          path: |
+            ./app-prod.apk
+            ./app-prod.aab
+          retention-days: 30
+
+  build-development:
+    needs: check-skip
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/build') &&
+      (github.event.comment.author_association == 'OWNER' || 
+       github.event.comment.author_association == 'COLLABORATOR' ||
+       github.event.comment.author_association == 'MEMBER') &&
+      !github.event.repository.fork
+    runs-on: ubuntu-latest
+    steps:
+      - name: get pr details
+        id: pr-details
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            return {
+              ref: pr.data.head.sha,
+              branch: pr.data.head.ref,
+              number: pr.data.number
+            };
+
+      - name: checkout pr branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ fromJson(steps.pr-details.outputs.result).ref }}
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: setup bun cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: install dependencies
+        run: |
+          bun install --frozen-lockfile
+          bun add -g eas-cli@latest
+
+      - name: setup eas build cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.eas-build-local
+          key: ${{ runner.os }}-eas-build-local-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-eas-build-local-
+
+      - name: verify eas cli installation
+        run: |
+          echo "EAS CLI version:"
+          eas --version
+
+      - name: comment build started
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ fromJson(steps.pr-details.outputs.result).number }};
+            
+            const comment = `development build started
+            
+            building development apk for pr #${prNumber}...
+            
+            this usually takes 5-10 minutes. will update this comment when ready`;
+            
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: build development apk
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
+          eas build --platform android --profile development --local --non-interactive --output=./app-dev.apk
+        env:
+          NODE_ENV: development
+
+      - name: generate dev build info
+        id: dev-build-info
+        run: |
+          if [ -f ./app.config.js ]; then
+            VERSION=$(bun run -e "const config = require('./app.config.js'); console.log(typeof config === 'function' ? config().expo.version : config.expo.version)")
+          elif [ -f ./app.json ]; then
+            VERSION=$(bun run -e "console.log(require('./app.json').expo.version)")
+          else
+            echo "No app.json or app.config.js found"
+            exit 1
+          fi
+          BUILD_NUMBER=$(date +%Y%m%d%H%M)
+          PR_NUMBER=${{ fromJson(steps.pr-details.outputs.result).number }}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: comment on pr with build info
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ fromJson(steps.pr-details.outputs.result).number }};
+            const version = '${{ steps.dev-build-info.outputs.version }}';
+            const buildNumber = '${{ steps.dev-build-info.outputs.build_number }}';
+            const branch = '${{ fromJson(steps.pr-details.outputs.result).branch }}';
+            const sha = '${{ fromJson(steps.pr-details.outputs.result).ref }}';
+            
+            const comment = `development build ready
+            
+            - version: ${version}
+            - build: ${buildNumber}
+            - commit: ${sha.substring(0, 7)}
+            - branch: ${branch}
+            - requested by: @${{ github.event.comment.user.login }}
+            
+            download: the development apk is available in the [actions tab](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).
+            
+            tip: to request another build, comment /build again.`;
+            
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: comment on build failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ fromJson(steps.pr-details.outputs.result).number }};
+            
+            const comment = `development build failed
+            
+            the build failed for pr #${prNumber}.
+            
+            check logs: [view workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.
+            
+            try again: comment /build to retry after fixing any issues.`;
+            
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: upload development artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-build-pr-${{ steps.dev-build-info.outputs.pr_number }}
+          path: |
+            ./app-dev.apk
+          retention-days: 7
+
+  build-manual:
+    needs: check-skip
+    if: github.event_name == 'workflow_dispatch' && !github.event.repository.fork
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: setup bun cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: install dependencies
+        run: |
+          bun install --frozen-lockfile
+          bun add -g eas-cli@latest
+
+      - name: setup eas build cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.eas-build-local
+          key: ${{ runner.os }}-eas-build-local-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-eas-build-local-
+
+      - name: verify eas cli installation
+        run: |
+          echo "EAS CLI version:"
+          eas --version
+
+      - name: build development apk
+        if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'dev'
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
+          eas build --platform android --profile development --local --non-interactive --output=./app-dev.apk
+        env:
+          NODE_ENV: development
+
+      - name: build production apk
+        if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'prod-apk'
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
+          eas build --platform android --profile production-apk --local --non-interactive --output=./app-prod.apk
+        env:
+          NODE_ENV: production
+
+      - name: build production aab
+        if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'prod-aab'
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
+          eas build --platform android --profile production --local --non-interactive --output=./app-prod.aab
+        env:
+          NODE_ENV: production
+
+      - name: upload manual build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-builds-${{ github.event.inputs.buildType }}
+          path: |
+            ./app-dev.apk
+            ./app-prod.apk
+            ./app-prod.aab
+          retention-days: 14
